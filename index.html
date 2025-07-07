@@ -11,6 +11,7 @@
     <style> 
         body { 
             font-family: 'Noto Sans KR', sans-serif; 
+            overflow-x: hidden; /* 좌우 스크롤 방지 */
         } 
         :root {
             --main-bg-color: #2c5282; /* 고정 파란색 */
@@ -381,8 +382,10 @@
                 nameSpan.className = `font-bold text-lg text-gray-800 cursor-pointer truncate`; 
                 nameSpan.textContent = member.name; 
                 nameSpan.contentEditable = true; 
+                nameSpan.setAttribute('placeholder', '이름 입력...');
                 nameSpan.onblur = (e) => { 
-                    membersCollection.doc(member.id).update({ name: e.target.textContent });
+                    const newName = e.target.textContent.trim();
+                    membersCollection.doc(member.id).update({ name: newName });
                 }; 
                 nameContainer.appendChild(nameSpan); 
                 
@@ -710,6 +713,8 @@
         cancelResetBtn.addEventListener('click', closeAllModals); 
         copyBtn.addEventListener('click', copyStatus); 
         
+        // --- iOS Zoom Prevention ---
+        // 1. Prevent pinch-to-zoom
         document.addEventListener('gesturestart', function (e) {
             e.preventDefault();
         });
@@ -718,6 +723,17 @@
                 event.preventDefault();
             }
         }, { passive: false });
+
+        // 2. Prevent double-tap to zoom
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function (event) {
+            const now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) {
+                event.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+
 
         window.addEventListener('click', (e) => { 
             if (!e.target.closest('.relative')) { 
