@@ -250,7 +250,7 @@
                     const data = doc.data();
                     if(data.startDate) startDateInput.value = data.startDate;
                     if(data.endDate) endDateInput.value = data.endDate;
-                    updateDateBasedInfo(false); // Do not reset photos on initial load
+                    updateDateBasedInfo(false); 
                 }
             }).catch(error => {
                 console.error("날짜 불러오기 실패:", error);
@@ -274,7 +274,7 @@
                     endDate: endDateVal
                 }).then(() => {
                     if (resetPhotos && isAdmin) {
-                        openModal(resetConfirmModal); // Ask for confirmation before deleting photos
+                        openModal(resetConfirmModal); 
                     }
                 }).catch(error => console.error("날짜 저장 실패:", error));
 
@@ -342,7 +342,6 @@
             mainFooter.style.display = showFooter ? 'flex' : 'none';
             mainDivider.style.display = showFooter ? 'block' : 'none';
             if (addMemberContainer) addMemberContainer.style.display = 'none';
-
 
             if (page === 'status') {
                 statusTabBtn.classList.add('custom-teal-text', 'border-b-2', 'border-current', 'font-extrabold');
@@ -611,20 +610,31 @@
                 snapshot.forEach(doc => {
                     const photo = { id: doc.id, ...doc.data() };
                     photos.push(photo);
-                    
+
                     const item = document.createElement('div');
                     item.className = 'photo-grid-item relative bg-gray-200 cursor-pointer group';
+                    
+                    const canDelete = isAdmin || currentUser === photo.userName;
+
                     item.innerHTML = `
                         <img src="${photo.url}" class="w-full h-full object-cover">
-                        <div class="absolute bottom-0 left-0 w-full bg-black bg-opacity-50 text-white p-1 text-xs truncate opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div class="absolute bottom-0 left-0 w-full bg-black bg-opacity-50 text-white p-1 text-xs truncate">
                             <span>${photo.userName}</span>
                             <span class="float-right">${new Date(photo.createdAt.seconds * 1000).toLocaleDateString('ko-KR')}</span>
                         </div>
+                        ${canDelete ? `<button data-id="${photo.id}" data-path="${photo.storagePath}" class="delete-photo-btn absolute top-1 right-1 bg-black bg-opacity-50 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity">&times;</button>` : ''}
                     `;
-                    item.addEventListener('click', () => {
+                    item.querySelector('img').addEventListener('click', () => {
                         photoViewerImg.src = photo.url;
                         openModal(photoViewerModal);
                     });
+                    
+                    if(canDelete) {
+                        item.querySelector('.delete-photo-btn').addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            deletePhoto(photo.id, photo.storagePath);
+                        });
+                    }
                     grid.appendChild(item);
                 });
             });
@@ -645,40 +655,29 @@
                         storagePath: filePath,
                         userName: currentUser,
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                    }).then((docRef) => {
+                    }).then(() => {
                         showToast('업로드 완료!');
-                        // Optimistic UI update
-                        const grid = document.getElementById('photo-grid');
-                        const emptyMessage = grid.querySelector('p');
-                        if (emptyMessage) emptyMessage.remove();
-
-                        const newPhoto = {
-                            id: docRef.id,
-                            url: url,
-                            userName: currentUser,
-                            createdAt: { seconds: Date.now() / 1000 }
-                        };
-                        photos.unshift(newPhoto);
-
-                        const item = document.createElement('div');
-                        item.className = 'photo-grid-item relative bg-gray-200 cursor-pointer group';
-                        item.innerHTML = `
-                            <img src="${newPhoto.url}" class="w-full h-full object-cover">
-                            <div class="absolute bottom-0 left-0 w-full bg-black bg-opacity-50 text-white p-1 text-xs truncate opacity-0 group-hover:opacity-100 transition-opacity">
-                                <span>${newPhoto.userName}</span>
-                                <span class="float-right">${new Date(newPhoto.createdAt.seconds * 1000).toLocaleDateString('ko-KR')}</span>
-                            </div>
-                        `;
-                        item.addEventListener('click', () => {
-                            photoViewerImg.src = newPhoto.url;
-                            openModal(photoViewerModal);
-                        });
-                        grid.prepend(item);
+                        switchPage('certification');
                     });
                 });
             }).catch(error => {
                 console.error("Upload failed: ", error)
                 showToast('업로드 실패. 다시 시도해주세요.');
+            });
+        }
+
+        function deletePhoto(photoId, storagePath) {
+            if (!confirm('사진을 정말로 삭제하시겠습니까?')) return;
+
+            const photoRef = storage.ref(storagePath);
+            photoRef.delete().then(() => {
+                photosCollection.doc(photoId).delete().then(() => {
+                    showToast('사진이 삭제되었습니다.');
+                    switchPage('certification');
+                });
+            }).catch(error => {
+                console.error("Error deleting photo: ", error);
+                showToast('사진 삭제에 실패했습니다.');
             });
         }
 
@@ -808,7 +807,7 @@
                     if (subTextParts.length > 0) status += ` (${subTextParts.join(', ')})`; 
                     textToCopy += status + '\n'; 
                 }); 
-            } else { 
+            } else if (currentPage === 'ranking') { 
                 textToCopy = `[${monthNumber}월 (${weekNumber}주) 랭킹 (${dateRangeText})]\n\n`; 
                 const rankedMembers = members.map(member => ({...member, points: calculatePoints(member)})).sort((a, b) => { 
                     if(b.points !== a.points) return b.points - a.points; 
@@ -870,13 +869,28 @@
         
         loginConfirmBtn.addEventListener('click', () => {
             const name = loginNameInput.value.trim();
-            if (name) {
-                currentUser = name;
-                isAdmin = name.toUpperCase() === 'ADMIN';
-                localStorage.setItem('workoutTrackerUser', name);
+            if (!name) return;
+
+            if (name.toUpperCase() === 'ADMIN') {
+                currentUser = 'ADMIN';
+                isAdmin = true;
+                localStorage.setItem('workoutTrackerUser', 'ADMIN');
                 closeAllModals();
                 initializeApp();
+                return;
             }
+
+            membersCollection.where("name", "==", name).get().then(snapshot => {
+                if (!snapshot.empty) {
+                    currentUser = name;
+                    isAdmin = false;
+                    localStorage.setItem('workoutTrackerUser', name);
+                    closeAllModals();
+                    initializeApp();
+                } else {
+                    showToast('등록된 멤버가 아닙니다.');
+                }
+            });
         });
         loginNameInput.addEventListener('keyup', (e) => {
             if (e.key === 'Enter') loginConfirmBtn.click();
@@ -909,7 +923,7 @@
                 console.error("Error fetching members: ", error);
             });
             
-            switchPage('status'); // Set initial page to 'status'
+            switchPage('status'); 
         }
         
         window.onload = checkLogin;
