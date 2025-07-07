@@ -360,126 +360,93 @@
         } 
 
         function renderStatusPage() { 
-            const oldOrder = Array.from(contentArea.querySelectorAll('.member-item')).map(el => el.dataset.id);
+            // 1. 애니메이션을 위해 이전 위치를 기록합니다.
             const firstPositions = {}; 
             contentArea.querySelectorAll('.member-item').forEach(el => { 
                 firstPositions[el.dataset.id] = el.getBoundingClientRect(); 
             }); 
             
+            // 2. 데이터를 정렬합니다.
             members.sort((a, b) => { 
                 if (b.count !== a.count) return b.count - a.count; 
                 return a.name.localeCompare(b.name, 'ko');
             }); 
             
-            contentArea.innerHTML = '';
-            const addMemberContainer = document.getElementById('add-member-container');
-            if (addMemberContainer) addMemberContainer.style.display = 'block';
+            // 3. 정렬된 순서대로 DOM 요소를 다시 정렬합니다. (삭제/재생성 대신)
+            members.forEach(member => {
+                const memberElement = contentArea.querySelector(`[data-id='${member.id}']`);
+                if(memberElement) {
+                    contentArea.appendChild(memberElement);
+                }
+            });
 
+            // 4. 각 요소의 내용을 최신 데이터로 업데이트합니다.
             if (!members || members.length === 0) {
                 contentArea.innerHTML = `<p class="text-center text-gray-500 py-8">멤버를 추가하여 운동 현황 기록을 시작해보세요!</p>`;
                 return;
             }
             members.forEach((member, index) => { 
-                const memberDiv = document.createElement('div'); 
+                const memberDiv = contentArea.querySelector(`[data-id='${member.id}']`);
+                if (!memberDiv) return; // Should not happen if logic is correct
+
                 const canEdit = isAdmin || currentUser === member.name;
-                memberDiv.className = `member-item flex flex-wrap items-center justify-between p-3 rounded-lg bg-gray-100`; 
-                memberDiv.dataset.id = member.id;
+
+                // 순위 업데이트
+                memberDiv.querySelector('.rank-span').textContent = `#${index + 1}`;
                 
-                const leftContainer = document.createElement('div'); 
-                leftContainer.className = 'flex items-center gap-3 min-w-0'; 
-                
-                const rankSpan = document.createElement('span'); 
-                rankSpan.className = `font-bold text-xl w-6 text-center text-gray-500 flex-shrink-0`; 
-                rankSpan.textContent = `#${index + 1}`; 
-                leftContainer.appendChild(rankSpan); 
-                
-                const nameContainer = document.createElement('div'); 
-                nameContainer.className = 'flex flex-col items-start truncate'; 
-                
-                const nameSpan = document.createElement('span'); 
-                nameSpan.className = `font-bold text-lg text-gray-800 truncate ${canEdit ? 'cursor-pointer' : ''}`; 
-                nameSpan.textContent = member.name; 
-                nameSpan.contentEditable = canEdit; 
-                nameSpan.setAttribute('placeholder', '이름 입력...');
-                nameSpan.onblur = (e) => { 
-                    if (canEdit) {
-                        const newName = e.target.textContent.trim();
-                        membersCollection.doc(member.id).update({ name: newName });
-                    }
-                }; 
-                nameContainer.appendChild(nameSpan); 
-                
+                // 이름 업데이트
+                const nameSpan = memberDiv.querySelector('.name-span');
+                nameSpan.textContent = member.name;
+                nameSpan.contentEditable = canEdit;
+
+                // (야근, 휴식) 텍스트 업데이트
+                const subTextSpan = memberDiv.querySelector('.subtext-span');
                 const subTextParts = []; 
                 if (member.overtimeCount > 0) subTextParts.push(`야근 ${member.overtimeCount}회`); 
                 if (member.restCount > 0) subTextParts.push(`휴식 ${member.restCount}회`); 
-                if (subTextParts.length > 0) { 
-                    const subTextSpan = document.createElement('span'); 
-                    subTextSpan.className = 'text-xs text-gray-500 mt-1 truncate'; 
-                    subTextSpan.textContent = `(${subTextParts.join(', ')})`; 
-                    nameContainer.appendChild(subTextSpan); 
-                } 
-                leftContainer.appendChild(nameContainer); 
-                
-                const rightDiv = document.createElement('div'); 
-                rightDiv.className = 'flex items-center gap-2 flex-shrink-0 ml-auto'; 
-                
-                const countText = document.createElement('span'); 
-                countText.className = 'text-lg text-right whitespace-nowrap'; 
-                countText.innerHTML = `<span class="font-bold text-xl custom-teal-text">${member.count}</span><span class="text-gray-500">회 / ${getWeeklyGoal()}회</span>`; 
-                
-                const controlsContainer = document.createElement('div'); 
-                controlsContainer.className = 'flex items-center gap-2'; 
-                
-                if (canEdit) {
-                    const plusButton = document.createElement('button'); 
-                    plusButton.className = 'w-8 h-8 rounded-full custom-teal text-white text-xl font-bold flex items-center justify-center transition-transform duration-200 hover:scale-110 active:scale-95'; 
-                    plusButton.textContent = '+'; 
-                    plusButton.onclick = () => updateRecord(member.id, 'workout', 1); 
-                    controlsContainer.appendChild(plusButton); 
-                    
-                    const etcContainer = document.createElement('div'); 
-                    etcContainer.className = 'relative'; 
-                    const etcButton = document.createElement('button'); 
-                    etcButton.className = 'px-3 py-1 rounded-md text-sm bg-gray-300 font-semibold transition-transform duration-200 hover:scale-105 active:scale-95'; 
-                    etcButton.textContent = '기타'; 
-                    etcButton.onclick = (e) => { e.stopPropagation(); toggleDropdown(member.id); }; 
-                    etcContainer.appendChild(etcButton); 
-                    const dropdownMenu = createDropdownMenu(member); 
-                    etcContainer.appendChild(dropdownMenu); 
-                    controlsContainer.appendChild(etcContainer); 
+                if (subTextParts.length > 0) {
+                    subTextSpan.textContent = `(${subTextParts.join(', ')})`;
+                    subTextSpan.style.display = 'block';
+                } else {
+                    subTextSpan.style.display = 'none';
                 }
                 
-                rightDiv.appendChild(countText); 
-                rightDiv.appendChild(controlsContainer); 
+                // 운동 횟수 업데이트
+                memberDiv.querySelector('.count-text').innerHTML = `<span class="font-bold text-xl custom-teal-text">${member.count}</span><span class="text-gray-500">회 / ${getWeeklyGoal()}회</span>`;
                 
-                memberDiv.appendChild(leftContainer); 
-                memberDiv.appendChild(rightDiv); 
-                contentArea.appendChild(memberDiv); 
+                // 버튼 활성화/비활성화
+                const controls = memberDiv.querySelector('.controls-container');
+                if (controls) controls.style.display = canEdit ? 'flex' : 'none';
+                
+                const workoutCancelBtn = memberDiv.querySelector('.workout-cancel-btn');
+                if(workoutCancelBtn) workoutCancelBtn.disabled = (member.count - member.overtimeCount) <= 0;
+                const overtimeCancelBtn = memberDiv.querySelector('.overtime-cancel-btn');
+                if(overtimeCancelBtn) overtimeCancelBtn.disabled = member.overtimeCount <= 0;
+                const restCancelBtn = memberDiv.querySelector('.rest-cancel-btn');
+                if(restCancelBtn) restCancelBtn.disabled = member.restCount <= 0;
             }); 
             
+            // 5. 실제로 위치가 바뀐 요소에만 애니메이션을 적용합니다.
             const memberItems = contentArea.querySelectorAll('.member-item'); 
-            memberItems.forEach((el, newIndex) => { 
+            memberItems.forEach(el => { 
                 const id = el.dataset.id; 
-                const oldIndex = oldOrder.indexOf(id);
+                const first = firstPositions[id]; 
+                if (!first) return; 
                 
-                if (oldIndex !== -1 && oldIndex !== newIndex) {
-                    const first = firstPositions[id]; 
-                    if (!first) return; 
-                    const last = el.getBoundingClientRect(); 
-                    const dx = first.left - last.left; 
-                    const dy = first.top - last.top; 
+                const last = el.getBoundingClientRect(); 
+                const dx = first.left - last.left; 
+                const dy = first.top - last.top; 
 
-                    if (Math.abs(dx) > 0.1 || Math.abs(dy) > 0.1) { 
-                        el.style.transform = `translate(${dx}px, ${dy}px)`; 
-                        el.style.transition = 'transform 0s'; 
-                        requestAnimationFrame(() => { 
-                            el.style.transform = ''; 
-                            el.style.transition = 'transform 0.5s ease-in-out'; 
-                        }); 
-                    } 
+                if (Math.abs(dx) > 0.1 || Math.abs(dy) > 0.1) { 
+                    el.style.transform = `translate(${dx}px, ${dy}px)`; 
+                    el.style.transition = 'transform 0s'; 
+                    requestAnimationFrame(() => { 
+                        el.style.transform = ''; 
+                        el.style.transition = 'transform 0.5s ease-in-out'; 
+                    }); 
                 }
             }); 
-        } 
+        }
 
         function renderRankingPage() { 
             contentArea.innerHTML = ''; 
