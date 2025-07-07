@@ -586,19 +586,26 @@
 
         function updateRecord(id, type, amount) {
             const memberDoc = membersCollection.doc(id);
-            const increment = firebase.firestore.FieldValue.increment(amount);
-            const decrement = firebase.firestore.FieldValue.increment(-amount);
+            // amount는 +1 또는 -1이므로, increment 변수 하나로 모든 증감 처리가 가능합니다.
+            const valueToUpdate = firebase.firestore.FieldValue.increment(amount);
 
-            if (amount > 0) {
-                if (type === 'workout') { memberDoc.update({ count: increment }); }
-                else if (type === 'overtime') { memberDoc.update({ count: increment, overtimeCount: increment }); }
-                else if (type === 'rest') { memberDoc.update({ restCount: increment }); }
-            } else {
+            if (type === 'workout') {
                 const member = members.find(m => m.id === id);
-                if (!member) return;
-                if (type === 'workout' && (member.count - member.overtimeCount) > 0) { memberDoc.update({ count: decrement }); }
-                else if (type === 'overtime' && member.overtimeCount > 0) { memberDoc.update({ count: decrement, overtimeCount: decrement }); }
-                else if (type === 'rest' && member.restCount > 0) { memberDoc.update({ restCount: decrement }); }
+                // 취소할 때, 순수 운동 횟수가 0이면 실행하지 않는 방어 로직
+                if (amount < 0 && (!member || (member.count - member.overtimeCount) <= 0)) return; 
+                memberDoc.update({ count: valueToUpdate });
+
+            } else if (type === 'overtime') {
+                const member = members.find(m => m.id === id);
+                // 취소할 때, 야근 횟수가 0이면 실행하지 않는 방어 로직
+                if (amount < 0 && (!member || member.overtimeCount <= 0)) return;
+                memberDoc.update({ count: valueToUpdate, overtimeCount: valueToUpdate });
+
+            } else if (type === 'rest') {
+                const member = members.find(m => m.id === id);
+                 // 취소할 때, 휴식 횟수가 0이면 실행하지 않는 방어 로직
+                if (amount < 0 && (!member || member.restCount <= 0)) return;
+                memberDoc.update({ restCount: valueToUpdate });
             }
         }
 
