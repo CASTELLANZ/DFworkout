@@ -3,10 +3,8 @@
  <head> 
     <meta charset="UTF-8"> 
     <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
-    <title>월간 운동 현황</title> 
-    <!-- Tailwind CSS CDN for styling --> 
+    <title>운동 현황</title> 
     <script src="https://cdn.tailwindcss.com"></script> 
-    <!-- Google Fonts for clean typography --> 
     <link rel="preconnect" href="https://fonts.googleapis.com"> 
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin> 
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet"> 
@@ -15,22 +13,27 @@
         body { 
             font-family: 'Noto Sans KR', sans-serif; 
         } 
+        /* CSS 변수를 사용한 동적 색상 테마 */
+        :root {
+            --main-bg-color: #2c5282; /* 고정 파란색 */
+            --main-text-color: #2c5282;
+        }
         /* 커스텀 색상 정의 */ 
         .custom-teal { 
-            background-color: #2c7a7b; /* 짙은 청록색 */ 
+            background-color: var(--main-bg-color); 
             color: white; 
         } 
         .custom-teal-border { 
-            border-color: #2c7a7b; 
-            color: #2c7a7b; 
+            border-color: var(--main-text-color); 
+            color: var(--main-text-color); 
         } 
         .custom-teal-text { 
-            color: #2c7a7b; 
+            color: var(--main-text-color); 
         } 
         /* contenteditable 요소의 기본 아웃라인 제거 및 플레이스홀더 스타일 */ 
         [contenteditable]:focus { 
             outline: none; 
-            box-shadow: 0 0 0 2px rgba(44, 122, 123, 0.5); 
+            box-shadow: 0 0 0 2px rgba(44, 82, 130, 0.5); 
             border-radius: 4px; 
         } 
         [contenteditable="true"]:empty:before{ 
@@ -83,54 +86,48 @@
 
     <div class="w-full max-w-md mx-auto bg-white shadow-lg rounded-lg my-8 p-6 relative"> 
 
-        <!-- 가이드 버튼 --> 
         <button id="guide-btn" class="absolute top-4 right-4 w-6 h-6 bg-gray-200 text-gray-600 rounded-full flex items-center justify-center font-bold text-sm hover:bg-gray-300 transition-colors">i</button> 
 
-        <!-- 헤더: 월, 주, 기간 --> 
-        <header class="flex justify-start items-stretch gap-3 mt-6 mb-12"> 
-            <div class="flex items-baseline"> 
-                <h1 id="month-number" class="text-6xl font-black text-gray-800" title="날짜를 선택하면 자동으로 계산됩니다.">00</h1> 
-                <span class="text-6xl font-bold text-gray-800 ml-1">월</span> 
-            </div> 
-            <div class="flex flex-col justify-between items-start"> 
-                <p class="font-bold text-gray-500 text-3xl"> 
-                    <span id="week-number" title="날짜를 선택하면 자동으로 계산됩니다.">0</span><span class="align-baseline">주</span> 
-                </p> 
-                <div class="flex items-center text-sm text-gray-500"> 
-                    <input type="date" id="start-date"> 
-                    <span class="px-1">~</span> 
-                    <input type="date" id="end-date"> 
-                </div> 
-            </div> 
-        </header> 
+        <header class="flex flex-col items-center text-center mb-12 pt-4">
+            <h2 class="text-4xl font-extrabold text-gray-800 mb-4">운동 현황</h2>
+            <div class="flex items-baseline gap-4 text-2xl text-gray-600">
+                <div class="flex items-baseline">
+                    <span id="month-number" title="날짜를 선택하면 자동으로 계산됩니다.">00</span>
+                    <span>월</span>
+                </div>
+                <div class="flex items-baseline">
+                    <span>(</span>
+                    <span id="week-number" title="날짜를 선택하면 자동으로 계산됩니다.">0</span>
+                    <span>주)</span>
+                </div>
+            </div>
+            <div class="flex items-center text-sm text-gray-500 mt-2">
+                <input type="date" id="start-date">
+                <span class="px-1">~</span>
+                <input type="date" id="end-date">
+            </div>
+        </header>
 
-        <!-- 탭 메뉴 --> 
         <div class="flex mb-6"> 
             <button id="status-tab-btn" class="flex-1 py-2 text-center font-bold rounded-l-lg custom-teal">현황</button> 
             <button id="ranking-tab-btn" class="flex-1 py-2 text-center font-bold rounded-r-lg border-2 custom-teal-border bg-white">랭킹</button> 
         </div> 
 
-        <!-- 컨텐츠 영역 (현황/랭킹) --> 
         <main id="content-area" class="space-y-4"> 
-            <!-- JavaScript로 컨텐츠가 여기에 생성됩니다. --> 
-        </main> 
+            </main> 
 
-        <!-- 멤버 추가 버튼 --> 
         <div id="add-member-container" class="text-center mt-4"> 
             <button id="add-member-btn" class="text-sm custom-teal-text font-semibold hover:underline">멤버 추가</button> 
         </div> 
 
-        <!-- 구분선 --> 
         <hr class="my-6"> 
 
-        <!-- 하단 버튼 그룹 --> 
         <footer class="flex justify-end gap-4"> 
             <button id="reset-btn" class="py-3 px-6 rounded-lg font-bold bg-gray-200 text-gray-700">기록 초기화</button> 
             <button id="copy-btn" class="py-3 px-6 rounded-lg font-bold custom-teal">현황 복사</button> 
         </footer> 
     </div> 
 
-    <!-- UI 요소들 (모달, 토스트 메시지) --> 
     <div id="toast-message" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg opacity-0 transition-opacity duration-300"> 
         클립보드에 복사되었습니다! 
     </div> 
@@ -181,7 +178,6 @@
         </div> 
     </div> 
 
-    <!-- Firebase SDK 로드 -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
@@ -201,13 +197,13 @@
         const db = firebase.firestore();
         const membersCollection = db.collection('members');
         const configDoc = db.collection('config').doc('guide');
-        const dateDoc = db.collection('config').doc('dates'); // 날짜 저장을 위한 참조 추가
+        const dateDoc = db.collection('config').doc('dates');
 
         // --- 데이터 및 상태 관리 --- 
         let currentPage = 'status';
         let members = [];
         
-        // --- DOM 요소 가져오기 (이전과 동일) --- 
+        // --- DOM 요소 가져오기 --- 
         const contentArea = document.getElementById('content-area'); 
         const addMemberContainer = document.getElementById('add-member-container'); 
         const statusTabBtn = document.getElementById('status-tab-btn'); 
@@ -263,21 +259,19 @@
             }).catch(error => console.error("Error loading guide: ", error));
         }
 
-        // Firestore에서 날짜를 불러오는 함수 (새로 추가)
         function loadDates() {
             dateDoc.get().then(doc => {
                 if (doc.exists) {
                     const data = doc.data();
                     if(data.startDate) startDateInput.value = data.startDate;
                     if(data.endDate) endDateInput.value = data.endDate;
-                    updateDateBasedInfo(); // 불러온 날짜로 화면 정보 업데이트
+                    updateDateBasedInfo();
                 }
             }).catch(error => {
                 console.error("날짜 불러오기 실패:", error);
             });
         }
 
-        // 날짜 변경 시 Firestore에 저장하는 로직을 포함하도록 수정
         function updateDateBasedInfo() { 
             const startDateVal = startDateInput.value; 
             const endDateVal = endDateInput.value; 
@@ -290,7 +284,6 @@
                 weekNumberEl.textContent = '0'; 
                 monthNumberEl.textContent = '00'; 
             } else { 
-                // 날짜가 유효할 때만 Firestore에 저장
                 dateDoc.set({ 
                     startDate: startDateVal,
                     endDate: endDateVal
@@ -586,24 +579,20 @@
 
         function updateRecord(id, type, amount) {
             const memberDoc = membersCollection.doc(id);
-            // amount는 +1 또는 -1이므로, increment 변수 하나로 모든 증감 처리가 가능합니다.
             const valueToUpdate = firebase.firestore.FieldValue.increment(amount);
 
             if (type === 'workout') {
                 const member = members.find(m => m.id === id);
-                // 취소할 때, 순수 운동 횟수가 0이면 실행하지 않는 방어 로직
                 if (amount < 0 && (!member || (member.count - member.overtimeCount) <= 0)) return; 
                 memberDoc.update({ count: valueToUpdate });
 
             } else if (type === 'overtime') {
                 const member = members.find(m => m.id === id);
-                // 취소할 때, 야근 횟수가 0이면 실행하지 않는 방어 로직
                 if (amount < 0 && (!member || member.overtimeCount <= 0)) return;
                 memberDoc.update({ count: valueToUpdate, overtimeCount: valueToUpdate });
 
             } else if (type === 'rest') {
                 const member = members.find(m => m.id === id);
-                 // 취소할 때, 휴식 횟수가 0이면 실행하지 않는 방어 로직
                 if (amount < 0 && (!member || member.restCount <= 0)) return;
                 memberDoc.update({ restCount: valueToUpdate });
             }
@@ -640,7 +629,7 @@
             const dateRangeText = `${formattedStartDate} ~ ${formattedEndDate}`; 
             let textToCopy = ``; 
             if (currentPage === 'status') { 
-                textToCopy = `[${monthNumber}월 ${weekNumber}주 운동 현황 (${dateRangeText})]\n\n`; 
+                textToCopy = `[${monthNumber}월 (${weekNumber}주) 운동 현황 (${dateRangeText})]\n\n`; 
                 const sortedMembers = [...members].sort((a,b) => { 
                     if(b.count !== a.count) return b.count - a.count; 
                     return a.name.localeCompare(b.name, 'ko');
@@ -654,7 +643,7 @@
                     textToCopy += status + '\n'; 
                 }); 
             } else { 
-                textToCopy = `[${monthNumber}월 ${weekNumber}주 랭킹 (${dateRangeText})]\n\n`; 
+                textToCopy = `[${monthNumber}월 (${weekNumber}주) 랭킹 (${dateRangeText})]\n\n`; 
                 const rankedMembers = members.map(member => ({...member, points: calculatePoints(member)})).sort((a, b) => { 
                     if(b.points !== a.points) return b.points - a.points; 
                     return a.overtimeCount - b.overtimeCount; 
@@ -719,8 +708,9 @@
 
         // --- 실시간 데이터 리스너 및 초기 렌더링 ---
         function initializeApp() {
+            // applyRandomColor(); // 랜덤 컬러 함수 호출 제거
             loadGuideContent();
-            loadDates(); // 앱 시작 시 저장된 날짜 불러오기
+            loadDates();
 
             membersCollection.onSnapshot(snapshot => {
                 let fetchedMembers = [];
@@ -729,7 +719,6 @@
                 });
                 members = fetchedMembers;
                 
-                // 데이터가 로드된 후 현재 페이지 다시 렌더링
                 if (currentPage === 'status') {
                     renderStatusPage();
                 } else {
