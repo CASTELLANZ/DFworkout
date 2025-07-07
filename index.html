@@ -345,14 +345,20 @@
         } 
 
         function renderStatusPage() { 
+            // 1. 애니메이션을 위해 이전 순서와 위치를 기록합니다.
+            const oldOrder = Array.from(contentArea.querySelectorAll('.member-item')).map(el => el.dataset.id);
             const firstPositions = {}; 
-            document.querySelectorAll('.member-item').forEach(el => { 
+            contentArea.querySelectorAll('.member-item').forEach(el => { 
                 firstPositions[el.dataset.id] = el.getBoundingClientRect(); 
             }); 
+            
+            // 2. 데이터를 정렬합니다.
             members.sort((a, b) => { 
                 if (b.count !== a.count) return b.count - a.count; 
                 return a.name.localeCompare(b.name, 'ko');
             }); 
+            
+            // 3. 정렬된 데이터를 기반으로 화면을 다시 그립니다.
             contentArea.innerHTML = '';
             if (!members || members.length === 0) {
                 contentArea.innerHTML = `<p class="text-center text-gray-500 py-8">멤버를 추가하여 운동 현황 기록을 시작해보세요!</p>`;
@@ -361,6 +367,7 @@
             members.forEach((member, index) => { 
                 const memberDiv = document.createElement('div'); 
                 memberDiv.className = `member-item flex items-center justify-between p-3 rounded-lg bg-gray-100 flex-nowrap`; 
+                memberDiv.dataset.id = member.id;
                 
                 const leftContainer = document.createElement('div'); 
                 leftContainer.className = 'flex items-center gap-3 min-w-0'; 
@@ -428,22 +435,29 @@
                 contentArea.appendChild(memberDiv); 
             }); 
             
-            const memberItems = document.querySelectorAll('.member-item'); 
-            memberItems.forEach(el => { 
+            // 4. 실제로 순위가 바뀐 요소에만 애니메이션을 적용합니다.
+            const memberItems = contentArea.querySelectorAll('.member-item'); 
+            memberItems.forEach((el, newIndex) => { 
                 const id = el.dataset.id; 
-                const first = firstPositions[id]; 
-                if (!first) return; 
-                const last = el.getBoundingClientRect(); 
-                const dx = first.left - last.left; 
-                const dy = first.top - last.top; 
-                if (dx !== 0 || dy !== 0) { 
-                    el.style.transform = `translate(${dx}px, ${dy}px)`; 
-                    el.style.transition = 'transform 0s'; 
-                    requestAnimationFrame(() => { 
-                        el.style.transform = ''; 
-                        el.style.transition = 'transform 0.5s ease-in-out'; 
-                    }); 
-                } 
+                const oldIndex = oldOrder.indexOf(id);
+                
+                // 순위가 변경된 경우에만 애니메이션을 실행합니다.
+                if (oldIndex !== -1 && oldIndex !== newIndex) {
+                    const first = firstPositions[id]; 
+                    if (!first) return; 
+                    const last = el.getBoundingClientRect(); 
+                    const dx = first.left - last.left; 
+                    const dy = first.top - last.top; 
+
+                    if (Math.abs(dx) > 0.1 || Math.abs(dy) > 0.1) { 
+                        el.style.transform = `translate(${dx}px, ${dy}px)`; 
+                        el.style.transition = 'transform 0s'; 
+                        requestAnimationFrame(() => { 
+                            el.style.transform = ''; 
+                            el.style.transition = 'transform 0.5s ease-in-out'; 
+                        }); 
+                    } 
+                }
             }); 
         } 
 
