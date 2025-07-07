@@ -119,7 +119,7 @@
         </footer> 
     </div> 
 
-    <div id="toast-message" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg opacity-0 transition-opacity duration-300"> 
+    <div id="toast-message" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg opacity-0 transition-opacity duration-300 text-sm whitespace-nowrap"> 
         클립보드에 복사되었습니다! 
     </div> 
     <div id="guide-modal" class="modal-overlay"> 
@@ -345,20 +345,17 @@
         } 
 
         function renderStatusPage() { 
-            // 1. 애니메이션을 위해 이전 순서와 위치를 기록합니다.
             const oldOrder = Array.from(contentArea.querySelectorAll('.member-item')).map(el => el.dataset.id);
             const firstPositions = {}; 
             contentArea.querySelectorAll('.member-item').forEach(el => { 
                 firstPositions[el.dataset.id] = el.getBoundingClientRect(); 
             }); 
             
-            // 2. 데이터를 정렬합니다.
             members.sort((a, b) => { 
                 if (b.count !== a.count) return b.count - a.count; 
                 return a.name.localeCompare(b.name, 'ko');
             }); 
             
-            // 3. 정렬된 데이터를 기반으로 화면을 다시 그립니다.
             contentArea.innerHTML = '';
             if (!members || members.length === 0) {
                 contentArea.innerHTML = `<p class="text-center text-gray-500 py-8">멤버를 추가하여 운동 현황 기록을 시작해보세요!</p>`;
@@ -435,13 +432,11 @@
                 contentArea.appendChild(memberDiv); 
             }); 
             
-            // 4. 실제로 순위가 바뀐 요소에만 애니메이션을 적용합니다.
             const memberItems = contentArea.querySelectorAll('.member-item'); 
             memberItems.forEach((el, newIndex) => { 
                 const id = el.dataset.id; 
                 const oldIndex = oldOrder.indexOf(id);
                 
-                // 순위가 변경된 경우에만 애니메이션을 실행합니다.
                 if (oldIndex !== -1 && oldIndex !== newIndex) {
                     const first = firstPositions[id]; 
                     if (!first) return; 
@@ -627,12 +622,13 @@
         } 
 
         function resetCounts() { 
-            const batch = db.batch();
-            members.forEach(member => {
-                const docRef = membersCollection.doc(member.id);
-                batch.update(docRef, { count: 0, overtimeCount: 0, restCount: 0 });
-            });
-            batch.commit().catch(error => console.error("Error resetting counts: ", error));
+            membersCollection.get().then(snapshot => {
+                const batch = db.batch();
+                snapshot.forEach(doc => {
+                    batch.update(doc.ref, { count: 0, overtimeCount: 0, restCount: 0 });
+                });
+                return batch.commit();
+            }).catch(error => console.error("Error resetting counts: ", error));
         } 
 
         function copyStatus() { 
