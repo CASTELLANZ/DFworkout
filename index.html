@@ -33,7 +33,10 @@
  <body class="bg-white"> 
 
     <div class="w-full max-w-md mx-auto p-4"> 
-        <button id="guide-btn" class="absolute top-4 right-4 w-6 h-6 bg-gray-200 text-gray-600 rounded-full flex items-center justify-center font-bold text-sm hover:bg-gray-300 transition-colors z-20">i</button> 
+        <div class="absolute top-4 right-4 flex items-center gap-2 z-20">
+            <button id="logout-btn" class="text-xs text-gray-500 hover:underline">로그아웃</button>
+            <button id="guide-btn" class="w-6 h-6 bg-gray-200 text-gray-600 rounded-full flex items-center justify-center font-bold text-sm hover:bg-gray-300 transition-colors">i</button> 
+        </div>
 
         <header class="flex flex-col items-center text-center mb-12 pt-4">
             <h2 class="text-4xl font-extrabold text-gray-800 mb-4">운동 현황</h2>
@@ -186,6 +189,7 @@
         const startDateInput = document.getElementById('start-date'); 
         const endDateInput = document.getElementById('end-date'); 
         const guideBtn = document.getElementById('guide-btn'); 
+        const logoutBtn = document.getElementById('logout-btn');
         const guideModal = document.getElementById('guide-modal'); 
         const closeGuideBtn = document.getElementById('close-guide-btn'); 
         const saveGuideBtn = document.getElementById('save-guide-btn');
@@ -607,7 +611,7 @@
                 snapshot.forEach(doc => {
                     const photo = { id: doc.id, ...doc.data() };
                     photos.push(photo);
-
+                    
                     const item = document.createElement('div');
                     item.className = 'photo-grid-item relative bg-gray-200 cursor-pointer group';
                     item.innerHTML = `
@@ -641,9 +645,35 @@
                         storagePath: filePath,
                         userName: currentUser,
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                    }).then(() => {
+                    }).then((docRef) => {
                         showToast('업로드 완료!');
-                        switchPage('certification');
+                        // Optimistic UI update
+                        const grid = document.getElementById('photo-grid');
+                        const emptyMessage = grid.querySelector('p');
+                        if (emptyMessage) emptyMessage.remove();
+
+                        const newPhoto = {
+                            id: docRef.id,
+                            url: url,
+                            userName: currentUser,
+                            createdAt: { seconds: Date.now() / 1000 }
+                        };
+                        photos.unshift(newPhoto);
+
+                        const item = document.createElement('div');
+                        item.className = 'photo-grid-item relative bg-gray-200 cursor-pointer group';
+                        item.innerHTML = `
+                            <img src="${newPhoto.url}" class="w-full h-full object-cover">
+                            <div class="absolute bottom-0 left-0 w-full bg-black bg-opacity-50 text-white p-1 text-xs truncate opacity-0 group-hover:opacity-100 transition-opacity">
+                                <span>${newPhoto.userName}</span>
+                                <span class="float-right">${new Date(newPhoto.createdAt.seconds * 1000).toLocaleDateString('ko-KR')}</span>
+                            </div>
+                        `;
+                        item.addEventListener('click', () => {
+                            photoViewerImg.src = newPhoto.url;
+                            openModal(photoViewerModal);
+                        });
+                        grid.prepend(item);
                     });
                 });
             }).catch(error => {
@@ -755,8 +785,56 @@
         } 
 
         function copyStatus() { 
-            // ... (previous implementation)
+            const weeklyGoal = getWeeklyGoal(); 
+            const monthNumber = document.getElementById('month-number').textContent || '00'; 
+            const weekNumber = weekNumberEl.textContent || '0'; 
+            const startDate = startDateInput.value; 
+            const endDate = endDateInput.value; 
+            const formattedStartDate = startDate ? startDate.replaceAll('-', '.') : '시작일'; 
+            const formattedEndDate = endDate ? endDate.replaceAll('-', '.') : '종료일'; 
+            const dateRangeText = `${formattedStartDate} ~ ${formattedEndDate}`; 
+            let textToCopy = ``; 
+            if (currentPage === 'status') { 
+                textToCopy = `[${monthNumber}월 (${weekNumber}주) 운동 현황 (${dateRangeText})]\n\n`; 
+                const sortedMembers = [...members].sort((a,b) => { 
+                    if(b.count !== a.count) return b.count - a.count; 
+                    return a.name.localeCompare(b.name, 'ko');
+                });
+                sortedMembers.forEach((member, index) => { 
+                    let status = `#${index + 1} ${member.name}: ${member.count}회 / ${weeklyGoal}회`; 
+                    const subTextParts = []; 
+                    if (member.overtimeCount > 0) subTextParts.push(`야근 ${member.overtimeCount}회`); 
+                    if (member.restCount > 0) subTextParts.push(`휴식 ${member.restCount}회`); 
+                    if (subTextParts.length > 0) status += ` (${subTextParts.join(', ')})`; 
+                    textToCopy += status + '\n'; 
+                }); 
+            } else { 
+                textToCopy = `[${monthNumber}월 (${weekNumber}주) 랭킹 (${dateRangeText})]\n\n`; 
+                const rankedMembers = members.map(member => ({...member, points: calculatePoints(member)})).sort((a, b) => { 
+                    if(b.points !== a.points) return b.points - a.points; 
+                    return a.overtimeCount - b.overtimeCount; 
+                }); 
+                rankedMembers.forEach((member, index) => { 
+                    let rankText = `#${index + 1} ${member.name}: ${member.points}pt`; 
+                    if (index === 0) rankText = `🥇 ${rankText}`; 
+                    if (index === 1) rankText = `🥈 ${rankText}`; 
+                    if (index === 2) rankText = `🥉 ${rankText}`; 
+                    textToCopy += rankText + '\n'; 
+                }); 
+            } 
+            const textarea = document.createElement('textarea'); 
+            textarea.value = textToCopy; 
+            document.body.appendChild(textarea); 
+            textarea.select(); 
+            document.execCommand('copy'); 
+            document.body.removeChild(textarea); 
+            showToast('클립보드에 복사되었습니다!');
         } 
+
+        function logout() {
+            localStorage.removeItem('workoutTrackerUser');
+            window.location.reload();
+        }
 
         // --- Event Listeners ---
         startDateInput.addEventListener('change', () => updateDateBasedInfo(true)); 
@@ -765,6 +843,7 @@
         certificationTabBtn.addEventListener('click', () => switchPage('certification'));
         rankingTabBtn.addEventListener('click', () => switchPage('ranking')); 
         guideBtn.addEventListener('click', () => openModal(guideModal)); 
+        logoutBtn.addEventListener('click', logout);
         closeGuideBtn.addEventListener('click', closeAllModals); 
         saveGuideBtn.addEventListener('click', saveGuideContent);
         addMemberBtn.addEventListener('click', () => openModal(addMemberModal)); 
