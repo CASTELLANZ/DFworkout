@@ -201,10 +201,11 @@
         const db = firebase.firestore();
         const membersCollection = db.collection('members');
         const configDoc = db.collection('config').doc('guide');
+        const dateDoc = db.collection('config').doc('dates'); // 날짜 저장을 위한 참조 추가
 
         // --- 데이터 및 상태 관리 --- 
         let currentPage = 'status';
-        let members = []; // 이 배열은 이제 Firestore에서 실시간으로 채워집니다.
+        let members = [];
         
         // --- DOM 요소 가져오기 (이전과 동일) --- 
         const contentArea = document.getElementById('content-area'); 
@@ -262,16 +263,39 @@
             }).catch(error => console.error("Error loading guide: ", error));
         }
 
+        // Firestore에서 날짜를 불러오는 함수 (새로 추가)
+        function loadDates() {
+            dateDoc.get().then(doc => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    if(data.startDate) startDateInput.value = data.startDate;
+                    if(data.endDate) endDateInput.value = data.endDate;
+                    updateDateBasedInfo(); // 불러온 날짜로 화면 정보 업데이트
+                }
+            }).catch(error => {
+                console.error("날짜 불러오기 실패:", error);
+            });
+        }
+
+        // 날짜 변경 시 Firestore에 저장하는 로직을 포함하도록 수정
         function updateDateBasedInfo() { 
             const startDateVal = startDateInput.value; 
             const endDateVal = endDateInput.value; 
             if (!startDateVal || !endDateVal) return; 
+            
             const startDate = new Date(startDateVal); 
             const endDate = new Date(endDateVal); 
+
             if (endDate < startDate) { 
                 weekNumberEl.textContent = '0'; 
                 monthNumberEl.textContent = '00'; 
             } else { 
+                // 날짜가 유효할 때만 Firestore에 저장
+                dateDoc.set({ 
+                    startDate: startDateVal,
+                    endDate: endDateVal
+                }).catch(error => console.error("날짜 저장 실패:", error));
+
                 const monthCounts = {}; 
                 let currentDate = new Date(startDate); 
                 while (currentDate <= endDate) { 
@@ -689,6 +713,7 @@
         // --- 실시간 데이터 리스너 및 초기 렌더링 ---
         function initializeApp() {
             loadGuideContent();
+            loadDates(); // 앱 시작 시 저장된 날짜 불러오기
 
             membersCollection.onSnapshot(snapshot => {
                 let fetchedMembers = [];
@@ -697,6 +722,7 @@
                 });
                 members = fetchedMembers;
                 
+                // 데이터가 로드된 후 현재 페이지 다시 렌더링
                 if (currentPage === 'status') {
                     renderStatusPage();
                 } else {
