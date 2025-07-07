@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin> 
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet"> 
     <style> 
-        body { 
+        html, body { 
             font-family: 'Noto Sans KR', sans-serif; 
             overflow-x: hidden; /* 좌우 스크롤 방지 */
         } 
@@ -75,11 +75,11 @@
         } 
     </style> 
  </head> 
- <body class="bg-gray-50 flex justify-center items-start min-h-screen"> 
+ <body class="bg-white"> 
 
-    <div class="w-full max-w-md mx-auto bg-white shadow-lg rounded-lg my-8 p-6 relative"> 
+    <div class="w-full max-w-md mx-auto p-4"> 
 
-        <button id="guide-btn" class="absolute top-4 right-4 w-6 h-6 bg-gray-200 text-gray-600 rounded-full flex items-center justify-center font-bold text-sm hover:bg-gray-300 transition-colors">i</button> 
+        <button id="guide-btn" class="absolute top-4 right-4 w-6 h-6 bg-gray-200 text-gray-600 rounded-full flex items-center justify-center font-bold text-sm hover:bg-gray-300 transition-colors z-20">i</button> 
 
         <header class="flex flex-col items-center text-center mb-12 pt-4">
             <h2 class="text-4xl font-extrabold text-gray-800 mb-4">운동 현황</h2>
@@ -404,7 +404,7 @@
                 rightDiv.className = 'flex items-center gap-2 flex-shrink-0 ml-auto'; 
                 
                 const countText = document.createElement('span'); 
-                countText.className = 'text-lg w-24 text-right'; 
+                countText.className = 'text-lg text-right whitespace-nowrap'; 
                 countText.innerHTML = `<span class="font-bold text-xl custom-teal-text">${member.count}</span><span class="text-gray-500">회 / ${getWeeklyGoal()}회</span>`; 
                 
                 const controlsContainer = document.createElement('div'); 
