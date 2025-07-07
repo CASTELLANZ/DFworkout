@@ -363,7 +363,7 @@
             }
             members.forEach((member, index) => { 
                 const memberDiv = document.createElement('div'); 
-                memberDiv.className = `member-item flex items-center justify-between p-3 rounded-lg bg-gray-100 flex-nowrap`; 
+                memberDiv.className = `member-item flex flex-wrap items-center justify-between p-3 rounded-lg bg-gray-100`; 
                 memberDiv.dataset.id = member.id;
                 
                 const leftContainer = document.createElement('div'); 
@@ -398,7 +398,7 @@
                 leftContainer.appendChild(nameContainer); 
                 
                 const rightDiv = document.createElement('div'); 
-                rightDiv.className = 'flex items-center gap-2 flex-shrink-0'; 
+                rightDiv.className = 'flex items-center gap-2 flex-shrink-0 ml-auto'; 
                 
                 const countText = document.createElement('span'); 
                 countText.className = 'text-lg w-24 text-right'; 
@@ -710,7 +710,6 @@
         cancelResetBtn.addEventListener('click', closeAllModals); 
         copyBtn.addEventListener('click', copyStatus); 
         
-        // Prevent zoom on mobile (especially iOS)
         document.addEventListener('gesturestart', function (e) {
             e.preventDefault();
         });
@@ -754,4 +753,3 @@
     </script> 
  </body> 
  </html>
-" from the most up-to-date Canvas "index.html (버그 수정)" document abo
