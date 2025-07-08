@@ -348,8 +348,7 @@
             const showFooter = page === 'status' || page === 'ranking';
             mainFooter.style.display = showFooter ? 'flex' : 'none';
             mainDivider.style.display = showFooter ? 'block' : 'none';
-            addMemberContainer.style.display = 'none';
-
+            
             if (page === 'status') {
                 statusTabBtn.classList.add('custom-teal-text', 'border-b-2', 'border-current', 'font-extrabold');
                 statusTabBtn.classList.remove('text-gray-500');
@@ -546,8 +545,6 @@
         } 
 
         function renderCertificationPage() {
-            if (photosUnsubscribe) photosUnsubscribe(); 
-
             contentArea.innerHTML = `
                 <div class="flex justify-end">
                     <label for="photo-upload-input" class="px-4 py-2 custom-teal text-white rounded-lg font-semibold cursor-pointer">+ 사진 등록</label>
@@ -558,43 +555,39 @@
             
             document.getElementById('photo-upload-input').addEventListener('change', handlePhotoUpload);
             
-            photosUnsubscribe = photosCollection.orderBy('createdAt', 'desc')
-                .onSnapshot(snapshot => {
-                    const grid = document.getElementById('photo-grid');
-                    if (!grid) return;
-                    grid.innerHTML = '';
+            const grid = document.getElementById('photo-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
 
-                    if (snapshot.empty) {
-                        grid.innerHTML = `<p class="col-span-3 text-center text-gray-500 py-8">등록된 인증 사진이 없습니다.</p>`;
-                        return;
-                    }
+            if (!photos || photos.length === 0) {
+                grid.innerHTML = `<p class="col-span-3 text-center text-gray-500 py-8">등록된 인증 사진이 없습니다.</p>`;
+                return;
+            }
 
-                    snapshot.forEach(doc => {
-                        const photo = { id: doc.id, ...doc.data() };
-                        const item = document.createElement('div');
-                        item.className = 'photo-grid-item relative bg-gray-200 cursor-pointer group';
-                        const canDelete = isAdmin || currentUser === photo.userName;
-                        item.innerHTML = `
-                            <img src="${photo.url}" class="w-full h-full object-cover">
-                            <div class="absolute bottom-0 left-0 w-full bg-black bg-opacity-50 text-white p-1 text-xs truncate">
-                                <span>${photo.userName}</span>
-                                <span class="float-right">${new Date(photo.createdAt.seconds * 1000).toLocaleDateString('ko-KR')}</span>
-                            </div>
-                            ${canDelete ? `<button data-id="${photo.id}" data-path="${photo.storagePath}" class="delete-photo-btn absolute top-1 right-1 bg-black bg-opacity-50 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity">&times;</button>` : ''}
-                        `;
-                        item.querySelector('img').addEventListener('click', () => {
-                            photoViewerImg.src = photo.url;
-                            openModal(photoViewerModal);
-                        });
-                        if (canDelete) {
-                            item.querySelector('.delete-photo-btn').addEventListener('click', (e) => {
-                                e.stopPropagation();
-                                deletePhoto(photo.id, photo.storagePath);
-                            });
-                        }
-                        grid.appendChild(item);
-                    });
+            photos.forEach(photo => {
+                const item = document.createElement('div');
+                item.className = 'photo-grid-item relative bg-gray-200 cursor-pointer group';
+                const canDelete = isAdmin || currentUser === photo.userName;
+                item.innerHTML = `
+                    <img src="${photo.url}" class="w-full h-full object-cover">
+                    <div class="absolute bottom-0 left-0 w-full bg-black bg-opacity-50 text-white p-1 text-xs truncate">
+                        <span>${photo.userName}</span>
+                        <span class="float-right">${new Date(photo.createdAt.seconds * 1000).toLocaleDateString('ko-KR')}</span>
+                    </div>
+                    ${canDelete ? `<button data-id="${photo.id}" data-path="${photo.storagePath}" class="delete-photo-btn absolute top-1 right-1 bg-black bg-opacity-50 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity">&times;</button>` : ''}
+                `;
+                item.querySelector('img').addEventListener('click', () => {
+                    photoViewerImg.src = photo.url;
+                    openModal(photoViewerModal);
                 });
+                if (canDelete) {
+                    item.querySelector('.delete-photo-btn').addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        deletePhoto(photo.id, photo.storagePath);
+                    });
+                }
+                grid.appendChild(item);
+            });
         }
 
         function handlePhotoUpload(event) {
@@ -879,6 +872,19 @@
             }, error => {
                 console.error("Error fetching members: ", error);
             });
+
+            if (photosUnsubscribe) photosUnsubscribe();
+            photosUnsubscribe = photosCollection.orderBy('createdAt', 'desc')
+                .onSnapshot(snapshot => {
+                    photos = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    if (currentPage === 'certification') {
+                        renderCertificationPage();
+                    }
+                }, error => {
+                    console.error("Error fetching photos: ", error);
+                });
+            
+            switchPage('status'); 
         }
         
         window.onload = checkLogin;
