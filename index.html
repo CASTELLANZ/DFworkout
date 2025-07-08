@@ -170,7 +170,8 @@
         let currentPage = 'status';
         let members = [];
         let photos = [];
-        let lastVisiblePhoto = null;
+        let photosUnsubscribe = null;
+        let membersUnsubscribe = null;
         let currentUser = null;
         let isAdmin = false;
         
@@ -203,7 +204,8 @@
         const photoViewerImg = document.getElementById('photo-viewer-img');
         const photoViewerCloseBtn = document.getElementById('photo-viewer-close-btn');
         const addMemberModal = document.getElementById('add-member-modal');
-        const addMemberBtn = document.querySelector('#add-member-container button');
+        const addMemberContainer = document.getElementById('add-member-container');
+        const addMemberBtn = addMemberContainer.querySelector('button');
         const confirmAddBtn = document.getElementById('confirm-add-btn');
         const cancelAddBtn = document.getElementById('cancel-add-btn');
         const newMemberNameInput = document.getElementById('new-member-name');
@@ -299,7 +301,7 @@
                 weekNumberEl.textContent = weeks; 
             } 
             if (currentPage === 'status') renderStatusPage(); 
-            else if (currentPage === 'certification') switchPage('certification');
+            else if (currentPage === 'certification') renderCertificationPage();
             else renderRankingPage(); 
         } 
 
@@ -329,8 +331,9 @@
         function switchPage(page) { 
             currentPage = page;
             const tabs = [statusTabBtn, certificationTabBtn, rankingTabBtn];
-            const addMemberContainer = document.getElementById('add-member-container');
             
+            if (photosUnsubscribe) photosUnsubscribe();
+
             tabs.forEach(tab => {
                 tab.classList.remove('custom-teal-text', 'border-b-2', 'border-current', 'font-extrabold');
                 tab.classList.add('text-gray-500');
@@ -339,12 +342,11 @@
             const showFooter = page === 'status' || page === 'ranking';
             mainFooter.style.display = showFooter ? 'flex' : 'none';
             mainDivider.style.display = showFooter ? 'block' : 'none';
-            if (addMemberContainer) addMemberContainer.style.display = 'none';
+            addMemberContainer.style.display = 'none';
 
             if (page === 'status') {
                 statusTabBtn.classList.add('custom-teal-text', 'border-b-2', 'border-current', 'font-extrabold');
                 statusTabBtn.classList.remove('text-gray-500');
-                if (addMemberContainer) addMemberContainer.style.display = 'block';
                 renderStatusPage();
             } else if (page === 'certification') {
                 certificationTabBtn.classList.add('custom-teal-text', 'border-b-2', 'border-current', 'font-extrabold');
@@ -372,8 +374,7 @@
             }); 
             
             contentArea.innerHTML = '';
-            const addMemberContainer = document.getElementById('add-member-container');
-            if (addMemberContainer) addMemberContainer.style.display = 'block';
+            addMemberContainer.style.display = isAdmin ? 'block' : 'none';
 
             if (!members || members.length === 0) {
                 contentArea.innerHTML = `<p class="text-center text-gray-500 py-8">멤버를 추가하여 운동 현황 기록을 시작해보세요!</p>`;
@@ -450,356 +451,97 @@
         } 
 
         function renderRankingPage() { 
-            contentArea.innerHTML = ''; 
-            const addMemberContainer = document.getElementById('add-member-container');
-            if (addMemberContainer) addMemberContainer.style.display = 'none';
-
-            if (!members || members.length === 0) {
-                contentArea.innerHTML = `<p class="text-center text-gray-500 py-8">멤버가 없어 랭킹을 표시할 수 없습니다.</p>`;
-                return;
-            }
-            const rankedMembers = members.map(member => ({ 
-                ...member, 
-                points: calculatePoints(member) 
-            })).sort((a, b) => { 
-                if(b.points !== a.points) return b.points - a.points; 
-                return a.overtimeCount - b.overtimeCount; 
-            }); 
-            const topRankers = rankedMembers.slice(0, 3); 
-            const otherRankers = rankedMembers.slice(3); 
-            const podium = document.createElement('div'); 
-            podium.className = 'flex justify-center items-end gap-2 mt-4 mb-8'; 
-            const displayOrder = [1, 0, 2]; 
-            const podiumHeights = ['h-32', 'h-24', 'h-20']; 
-            const podiumColors = ['bg-yellow-500', 'bg-gray-400', 'bg-yellow-600']; 
-            const podiumMedals = ['🥇', '🥈', '🥉']; 
-            displayOrder.forEach(orderIndex => {
-                const member = topRankers[orderIndex];
-                const rankIndex = member ? rankedMembers.indexOf(member) : -1;
-                const podiumUnitContainer = document.createElement('div');
-                podiumUnitContainer.className = 'w-1/3 flex flex-col items-center';
-                const nameSpan = document.createElement('span');
-                nameSpan.className = 'font-bold text-lg mb-1 truncate w-full text-center text-gray-800 h-7';
-                const podiumBlock = document.createElement('div');
-                let heightClass = 'h-16';
-                if(rankIndex !== -1) {
-                    if (rankIndex === 0) heightClass = podiumHeights[0];
-                    else if (rankIndex === 1) heightClass = podiumHeights[1];
-                    else if (rankIndex === 2) heightClass = podiumHeights[2];
-                }
-                
-                podiumBlock.className = `w-full ${heightClass} rounded-t-lg flex flex-col items-center justify-center p-2 text-white shadow-lg`;
-                if (member) {
-                    nameSpan.textContent = member.name;
-                    podiumBlock.classList.add(podiumColors[rankIndex]);
-                    const medalSpan = document.createElement('span');
-                    medalSpan.className = 'text-3xl';
-                    medalSpan.textContent = podiumMedals[rankIndex];
-                    podiumBlock.appendChild(medalSpan);
-                    const pointSpan = document.createElement('span');
-                    pointSpan.className = 'text-sm font-semibold mt-1';
-                    pointSpan.textContent = `${member.points}pt`;
-                    podiumBlock.appendChild(pointSpan);
-                } else {
-                    podiumBlock.classList.add('bg-gray-200');
-                }
-                podiumUnitContainer.appendChild(nameSpan);
-                podiumUnitContainer.appendChild(podiumBlock);
-                podium.appendChild(podiumUnitContainer);
-            });
-            contentArea.appendChild(podium); 
-            if (otherRankers.length > 0) { 
-                const listContainer = document.createElement('div'); 
-                listContainer.className = 'space-y-2'; 
-                otherRankers.forEach((member, index) => { 
-                    const rank = index + 4; 
-                    const listItem = document.createElement('div'); 
-                    listItem.className = 'flex items-center justify-between p-3 rounded-lg bg-gray-100'; 
-                    const leftDiv = document.createElement('div'); 
-                    leftDiv.className = 'flex items-center gap-3'; 
-                    const rankSpan = document.createElement('span'); 
-                    rankSpan.className = 'font-bold text-lg w-6 text-center text-gray-500'; 
-                    rankSpan.textContent = `#${rank}`; 
-                    leftDiv.appendChild(rankSpan); 
-                    const nameSpan = document.createElement('span'); 
-                    nameSpan.className = 'font-semibold text-gray-800'; 
-                    nameSpan.textContent = member.name; 
-                    leftDiv.appendChild(nameSpan); 
-                    listItem.appendChild(leftDiv); 
-                    const pointSpan = document.createElement('span'); 
-                    pointSpan.className = 'font-bold text-lg custom-teal-text'; 
-                    pointSpan.textContent = `${member.points}pt`; 
-                    listItem.appendChild(pointSpan); 
-                    listContainer.appendChild(listItem); 
-                }); 
-                contentArea.appendChild(listContainer); 
-            } 
-        } 
+            // ... (previous implementation)
+        }
 
         function renderCertificationPage() {
+            if (photosUnsubscribe) photosUnsubscribe(); 
+
             contentArea.innerHTML = `
                 <div class="flex justify-end">
                     <label for="photo-upload-input" class="px-4 py-2 custom-teal text-white rounded-lg font-semibold cursor-pointer">+ 사진 등록</label>
                     <input type="file" id="photo-upload-input" class="hidden" accept="image/*">
                 </div>
                 <div id="photo-grid" class="grid grid-cols-3 gap-1"></div>
-                <div id="load-more-container" class="text-center mt-4">
-                    <button id="load-more-photos-btn" class="text-sm custom-teal-text font-semibold hover:underline">더보기</button>
-                </div>
             `;
             
-            photos = [];
-            lastVisiblePhoto = null;
-            loadPhotos(); 
-
             document.getElementById('photo-upload-input').addEventListener('change', handlePhotoUpload);
-            document.getElementById('load-more-photos-btn').addEventListener('click', () => loadPhotos(lastVisiblePhoto));
-        }
+            
+            photosUnsubscribe = photosCollection.orderBy('createdAt', 'desc')
+                .onSnapshot(snapshot => {
+                    const grid = document.getElementById('photo-grid');
+                    if (!grid) return;
+                    grid.innerHTML = '';
 
-        function loadPhotos(startAfterDoc = null) {
-            let query = photosCollection.orderBy('createdAt', 'desc').limit(9);
-            if (startAfterDoc) {
-                query = query.startAfter(startAfterDoc);
-            }
-
-            query.get().then(snapshot => {
-                const loadMoreBtn = document.getElementById('load-more-photos-btn');
-                if (snapshot.empty) {
-                    if (loadMoreBtn) loadMoreBtn.textContent = '마지막 사진입니다.';
-                    if(photos.length === 0) {
-                        document.getElementById('photo-grid').innerHTML = `<p class="col-span-3 text-center text-gray-500 py-8">등록된 인증 사진이 없습니다.</p>`;
+                    if (snapshot.empty) {
+                        grid.innerHTML = `<p class="col-span-3 text-center text-gray-500 py-8">등록된 인증 사진이 없습니다.</p>`;
+                        return;
                     }
-                    return;
-                }
-                
-                lastVisiblePhoto = snapshot.docs[snapshot.docs.length - 1];
-                const grid = document.getElementById('photo-grid');
 
-                snapshot.forEach(doc => {
-                    const photo = { id: doc.id, ...doc.data() };
-                    photos.push(photo);
-
-                    const item = document.createElement('div');
-                    item.className = 'photo-grid-item relative bg-gray-200 cursor-pointer group';
-                    
-                    const canDelete = isAdmin || currentUser === photo.userName;
-
-                    item.innerHTML = `
-                        <img src="${photo.url}" class="w-full h-full object-cover">
-                        <div class="absolute bottom-0 left-0 w-full bg-black bg-opacity-50 text-white p-1 text-xs truncate">
-                            <span>${photo.userName}</span>
-                            <span class="float-right">${new Date(photo.createdAt.seconds * 1000).toLocaleDateString('ko-KR')}</span>
-                        </div>
-                        ${canDelete ? `<button data-id="${photo.id}" data-path="${photo.storagePath}" class="delete-photo-btn absolute top-1 right-1 bg-black bg-opacity-50 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity">&times;</button>` : ''}
-                    `;
-                    item.querySelector('img').addEventListener('click', () => {
-                        photoViewerImg.src = photo.url;
-                        openModal(photoViewerModal);
-                    });
-                    
-                    if(canDelete) {
-                        item.querySelector('.delete-photo-btn').addEventListener('click', (e) => {
-                            e.stopPropagation();
-                            deletePhoto(photo.id, photo.storagePath);
+                    snapshot.forEach(doc => {
+                        const photo = { id: doc.id, ...doc.data() };
+                        const item = document.createElement('div');
+                        item.className = 'photo-grid-item relative bg-gray-200 cursor-pointer group';
+                        const canDelete = isAdmin || currentUser === photo.userName;
+                        item.innerHTML = `
+                            <img src="${photo.url}" class="w-full h-full object-cover">
+                            <div class="absolute bottom-0 left-0 w-full bg-black bg-opacity-50 text-white p-1 text-xs truncate">
+                                <span>${photo.userName}</span>
+                                <span class="float-right">${new Date(photo.createdAt.seconds * 1000).toLocaleDateString('ko-KR')}</span>
+                            </div>
+                            ${canDelete ? `<button data-id="${photo.id}" data-path="${photo.storagePath}" class="delete-photo-btn absolute top-1 right-1 bg-black bg-opacity-50 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity">&times;</button>` : ''}
+                        `;
+                        item.querySelector('img').addEventListener('click', () => {
+                            photoViewerImg.src = photo.url;
+                            openModal(photoViewerModal);
                         });
-                    }
-                    grid.appendChild(item);
+                        if (canDelete) {
+                            item.querySelector('.delete-photo-btn').addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                deletePhoto(photo.id, photo.storagePath);
+                            });
+                        }
+                        grid.appendChild(item);
+                    });
                 });
-            });
         }
 
         function handlePhotoUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            showToast('사진 업로드 중...');
-            const filePath = `photos/${Date.now()}_${file.name}`;
-            const fileRef = storage.ref(filePath);
-            
-            fileRef.put(file).then(() => {
-                fileRef.getDownloadURL().then(url => {
-                    photosCollection.add({
-                        url: url,
-                        storagePath: filePath,
-                        userName: currentUser,
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                    }).then(() => {
-                        showToast('업로드 완료!');
-                        switchPage('certification');
-                    });
-                });
-            }).catch(error => {
-                console.error("Upload failed: ", error)
-                showToast('업로드 실패. 다시 시도해주세요.');
-            });
+            // ... (previous implementation)
         }
 
         function deletePhoto(photoId, storagePath) {
-            if (!confirm('사진을 정말로 삭제하시겠습니까?')) return;
-
-            const photoRef = storage.ref(storagePath);
-            photoRef.delete().then(() => {
-                photosCollection.doc(photoId).delete().then(() => {
-                    showToast('사진이 삭제되었습니다.');
-                    switchPage('certification');
-                });
-            }).catch(error => {
-                console.error("Error deleting photo: ", error);
-                showToast('사진 삭제에 실패했습니다.');
-            });
+            // ... (previous implementation)
         }
 
         function createDropdownMenu(member) { 
-            const dropdownMenu = document.createElement('div'); 
-            dropdownMenu.id = `dropdown-${member.id}`; 
-            dropdownMenu.className = 'hidden absolute right-0 mt-2 w-32 bg-white rounded-md shadow-lg z-10'; 
-            const baseItemClass = 'block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed'; 
-            const overtimeItem = document.createElement('button'); 
-            overtimeItem.className = baseItemClass; 
-            overtimeItem.textContent = '야근'; 
-            overtimeItem.onclick = () => { updateRecord(member.id, 'overtime', 1); toggleDropdown(member.id, true); }; 
-            dropdownMenu.appendChild(overtimeItem); 
-            const restItem = document.createElement('button'); 
-            restItem.className = baseItemClass; 
-            restItem.textContent = '휴식'; 
-            restItem.onclick = () => { updateRecord(member.id, 'rest', 1); toggleDropdown(member.id, true); }; 
-            dropdownMenu.appendChild(restItem); 
-            const divider = document.createElement('hr'); 
-            divider.className = 'my-1'; 
-            dropdownMenu.appendChild(divider); 
-            const workoutCancelItem = document.createElement('button'); 
-            workoutCancelItem.className = `${baseItemClass} workout-cancel-btn`; 
-            workoutCancelItem.textContent = '운동 취소'; 
-            workoutCancelItem.disabled = (member.count - member.overtimeCount) <= 0; 
-            workoutCancelItem.onclick = () => { updateRecord(member.id, 'workout', -1); toggleDropdown(member.id, true); }; 
-            dropdownMenu.appendChild(workoutCancelItem); 
-            const overtimeCancelItem = document.createElement('button'); 
-            overtimeCancelItem.className = `${baseItemClass} overtime-cancel-btn`; 
-            overtimeCancelItem.textContent = '야근 취소'; 
-            overtimeCancelItem.disabled = member.overtimeCount <= 0; 
-            overtimeCancelItem.onclick = () => { updateRecord(member.id, 'overtime', -1); toggleDropdown(member.id, true); }; 
-            dropdownMenu.appendChild(overtimeCancelItem); 
-            const restCancelItem = document.createElement('button'); 
-            restCancelItem.className = `${baseItemClass} rest-cancel-btn`; 
-            restCancelItem.textContent = '휴식 취소'; 
-            restCancelItem.disabled = member.restCount <= 0; 
-            restCancelItem.onclick = () => { updateRecord(member.id, 'rest', -1); toggleDropdown(member.id, true); }; 
-            dropdownMenu.appendChild(restCancelItem); 
-            return dropdownMenu; 
+            // ... (previous implementation)
         } 
         
         function toggleDropdown(id, forceClose = false) { 
-            const dropdown = document.getElementById(`dropdown-${id}`); 
-            if (!dropdown) return; 
-            document.querySelectorAll('[id^="dropdown-"]').forEach(d => { 
-                if (d.id !== `dropdown-${id}`) d.classList.add('hidden'); 
-            }); 
-            if (forceClose) dropdown.classList.add('hidden'); 
-            else dropdown.classList.toggle('hidden'); 
+            // ... (previous implementation)
         } 
 
         function updateRecord(id, type, amount) {
-            const memberDoc = membersCollection.doc(id);
-            const valueToUpdate = firebase.firestore.FieldValue.increment(amount);
-
-            if (type === 'workout') {
-                const member = members.find(m => m.id === id);
-                if (amount < 0 && (!member || (member.count - member.overtimeCount) <= 0)) return; 
-                memberDoc.update({ count: valueToUpdate });
-            } else if (type === 'overtime') {
-                const member = members.find(m => m.id === id);
-                if (amount < 0 && (!member || member.overtimeCount <= 0)) return;
-                memberDoc.update({ count: valueToUpdate, overtimeCount: valueToUpdate });
-            } else if (type === 'rest') {
-                const member = members.find(m => m.id === id);
-                if (amount < 0 && (!member || member.restCount <= 0)) return;
-                memberDoc.update({ restCount: valueToUpdate });
-            }
+            // ... (previous implementation)
         }
 
         function addMember(name) { 
-            if (name && isAdmin) { 
-                membersCollection.add({
-                    name: name,
-                    count: 0,
-                    overtimeCount: 0,
-                    restCount: 0,
-                }).catch(error => console.error("Error adding member: ", error));
-            } 
+            // ... (previous implementation)
         } 
 
         function resetAllData() {
-            // 1. Delete all photos
-            photosCollection.get().then(snapshot => {
-                const batch = db.batch();
-                snapshot.forEach(doc => {
-                    const path = doc.data().storagePath;
-                    if (path) {
-                        storage.ref(path).delete().catch(e => console.error("Failed to delete file:", e));
-                    }
-                    batch.delete(doc.ref);
-                });
-                return batch.commit();
-            });
-            // 2. Reset member counts
-            membersCollection.get().then(snapshot => {
-                const batch = db.batch();
-                snapshot.forEach(doc => {
-                    batch.update(doc.ref, { count: 0, overtimeCount: 0, restCount: 0 });
-                });
-                return batch.commit();
-            });
+            // ... (previous implementation)
         } 
 
         function copyStatus() { 
-            const weeklyGoal = getWeeklyGoal(); 
-            const monthNumber = document.getElementById('month-number').textContent || '00'; 
-            const weekNumber = weekNumberEl.textContent || '0'; 
-            const startDate = startDateInput.value; 
-            const endDate = endDateInput.value; 
-            const formattedStartDate = startDate ? startDate.replaceAll('-', '.') : '시작일'; 
-            const formattedEndDate = endDate ? endDate.replaceAll('-', '.') : '종료일'; 
-            const dateRangeText = `${formattedStartDate} ~ ${formattedEndDate}`; 
-            let textToCopy = ``; 
-            if (currentPage === 'status') { 
-                textToCopy = `[${monthNumber}월 (${weekNumber}주) 운동 현황 (${dateRangeText})]\n\n`; 
-                const sortedMembers = [...members].sort((a,b) => { 
-                    if(b.count !== a.count) return b.count - a.count; 
-                    return a.name.localeCompare(b.name, 'ko');
-                });
-                sortedMembers.forEach((member, index) => { 
-                    let status = `#${index + 1} ${member.name}: ${member.count}회 / ${weeklyGoal}회`; 
-                    const subTextParts = []; 
-                    if (member.overtimeCount > 0) subTextParts.push(`야근 ${member.overtimeCount}회`); 
-                    if (member.restCount > 0) subTextParts.push(`휴식 ${member.restCount}회`); 
-                    if (subTextParts.length > 0) status += ` (${subTextParts.join(', ')})`; 
-                    textToCopy += status + '\n'; 
-                }); 
-            } else if (currentPage === 'ranking') { 
-                textToCopy = `[${monthNumber}월 (${weekNumber}주) 랭킹 (${dateRangeText})]\n\n`; 
-                const rankedMembers = members.map(member => ({...member, points: calculatePoints(member)})).sort((a, b) => { 
-                    if(b.points !== a.points) return b.points - a.points; 
-                    return a.overtimeCount - b.overtimeCount; 
-                }); 
-                rankedMembers.forEach((member, index) => { 
-                    let rankText = `#${index + 1} ${member.name}: ${member.points}pt`; 
-                    if (index === 0) rankText = `🥇 ${rankText}`; 
-                    if (index === 1) rankText = `🥈 ${rankText}`; 
-                    if (index === 2) rankText = `🥉 ${rankText}`; 
-                    textToCopy += rankText + '\n'; 
-                }); 
-            } 
-            const textarea = document.createElement('textarea'); 
-            textarea.value = textToCopy; 
-            document.body.appendChild(textarea); 
-            textarea.select(); 
-            document.execCommand('copy'); 
-            document.body.removeChild(textarea); 
-            showToast('클립보드에 복사되었습니다!');
+            // ... (previous implementation)
         } 
 
         function logout() {
             localStorage.removeItem('workoutTrackerUser');
+            if (membersUnsubscribe) membersUnsubscribe();
+            if (photosUnsubscribe) photosUnsubscribe();
             window.location.reload();
         }
 
@@ -880,7 +622,8 @@
             loadGuideContent();
             loadDates();
 
-            membersCollection.onSnapshot(snapshot => {
+            if (membersUnsubscribe) membersUnsubscribe();
+            membersUnsubscribe = membersCollection.onSnapshot(snapshot => {
                 let fetchedMembers = [];
                 snapshot.forEach(doc => {
                     fetchedMembers.push({ id: doc.id, ...doc.data() });
