@@ -346,7 +346,6 @@
             if (page === 'status') {
                 statusTabBtn.classList.add('custom-teal-text', 'border-b-2', 'border-current', 'font-extrabold');
                 statusTabBtn.classList.remove('text-gray-500');
-                if (isAdmin) addMemberContainer.style.display = 'block';
                 
                 membersUnsubscribe = membersCollection.onSnapshot(snapshot => {
                     members = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -461,8 +460,7 @@
 
         function renderRankingPage() { 
             contentArea.innerHTML = ''; 
-            const addMemberContainer = document.getElementById('add-member-container');
-            if (addMemberContainer) addMemberContainer.style.display = 'none';
+            addMemberContainer.style.display = 'none';
 
             if (!members || members.length === 0) {
                 contentArea.innerHTML = `<p class="text-center text-gray-500 py-8">멤버가 없어 랭킹을 표시할 수 없습니다.</p>`;
@@ -472,7 +470,10 @@
                 ...member, 
                 points: calculatePoints(member) 
             })).sort((a, b) => { 
-                if(b.points !== a.points) return b.points - a.points; 
+                if (b.points !== a.points) return b.points - a.points; 
+                if (a.points === 0 && b.points === 0) {
+                    if (b.count !== a.count) return b.count - a.count;
+                }
                 return a.overtimeCount - b.overtimeCount; 
             }); 
             const topRankers = rankedMembers.slice(0, 3); 
@@ -766,7 +767,10 @@
             } else if (currentPage === 'ranking') { 
                 textToCopy = `[${monthNumber}월 (${weekNumber}주) 랭킹 (${dateRangeText})]\n\n`; 
                 const rankedMembers = members.map(member => ({...member, points: calculatePoints(member)})).sort((a, b) => { 
-                    if(b.points !== a.points) return b.points - a.points; 
+                    if (b.points !== a.points) return b.points - a.points; 
+                    if (a.points === 0 && b.points === 0) {
+                        if (b.count !== a.count) return b.count - a.count;
+                    }
                     return a.overtimeCount - b.overtimeCount; 
                 }); 
                 rankedMembers.forEach((member, index) => { 
