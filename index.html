@@ -349,11 +349,7 @@
                 if (isAdmin) addMemberContainer.style.display = 'block';
                 
                 membersUnsubscribe = membersCollection.onSnapshot(snapshot => {
-                    let fetchedMembers = [];
-                    snapshot.forEach(doc => {
-                        fetchedMembers.push({ id: doc.id, ...doc.data() });
-                    });
-                    members = fetchedMembers;
+                    members = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                     renderStatusPage();
                 });
 
@@ -366,11 +362,7 @@
                 rankingTabBtn.classList.remove('text-gray-500');
                 
                 membersUnsubscribe = membersCollection.onSnapshot(snapshot => {
-                    let fetchedMembers = [];
-                    snapshot.forEach(doc => {
-                        fetchedMembers.push({ id: doc.id, ...doc.data() });
-                    });
-                    members = fetchedMembers;
+                    members = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                     renderRankingPage();
                 });
             }
@@ -490,7 +482,7 @@
             const displayOrder = [1, 0, 2]; 
             const podiumHeights = ['h-32', 'h-24', 'h-20']; 
             const podiumColors = ['bg-yellow-500', 'bg-gray-400', 'bg-yellow-600']; 
-            const podiumMedals = ['🥇', '�', '🥉']; 
+            const podiumMedals = ['🥇', '🥈', '🥉']; 
             displayOrder.forEach(orderIndex => {
                 const member = topRankers[orderIndex];
                 const rankIndex = member ? rankedMembers.indexOf(member) : -1;
@@ -607,35 +599,191 @@
         }
 
         function handlePhotoUpload(event) {
-            // ... (previous implementation)
+            const file = event.target.files[0];
+            if (!file) return;
+
+            showToast('사진 업로드 중...');
+            const filePath = `photos/${Date.now()}_${file.name}`;
+            const fileRef = storage.ref(filePath);
+            
+            fileRef.put(file).then(() => {
+                fileRef.getDownloadURL().then(url => {
+                    photosCollection.add({
+                        url: url,
+                        storagePath: filePath,
+                        userName: currentUser,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    }).then(() => {
+                        showToast('업로드 완료!');
+                    });
+                });
+            }).catch(error => {
+                console.error("Upload failed: ", error)
+                showToast('업로드 실패. 다시 시도해주세요.');
+            });
         }
 
         function deletePhoto(photoId, storagePath) {
-            // ... (previous implementation)
+            if (!confirm('사진을 정말로 삭제하시겠습니까?')) return;
+
+            const photoRef = storage.ref(storagePath);
+            photoRef.delete().then(() => {
+                photosCollection.doc(photoId).delete().then(() => {
+                    showToast('사진이 삭제되었습니다.');
+                });
+            }).catch(error => {
+                console.error("Error deleting photo: ", error);
+                showToast('사진 삭제에 실패했습니다.');
+            });
         }
 
         function createDropdownMenu(member) { 
-            // ... (previous implementation)
+            const dropdownMenu = document.createElement('div'); 
+            dropdownMenu.id = `dropdown-${member.id}`; 
+            dropdownMenu.className = 'hidden absolute right-0 mt-2 w-32 bg-white rounded-md shadow-lg z-10'; 
+            const baseItemClass = 'block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed'; 
+            const overtimeItem = document.createElement('button'); 
+            overtimeItem.className = baseItemClass; 
+            overtimeItem.textContent = '야근'; 
+            overtimeItem.onclick = () => { updateRecord(member.id, 'overtime', 1); toggleDropdown(member.id, true); }; 
+            dropdownMenu.appendChild(overtimeItem); 
+            const restItem = document.createElement('button'); 
+            restItem.className = baseItemClass; 
+            restItem.textContent = '휴식'; 
+            restItem.onclick = () => { updateRecord(member.id, 'rest', 1); toggleDropdown(member.id, true); }; 
+            dropdownMenu.appendChild(restItem); 
+            const divider = document.createElement('hr'); 
+            divider.className = 'my-1'; 
+            dropdownMenu.appendChild(divider); 
+            const workoutCancelItem = document.createElement('button'); 
+            workoutCancelItem.className = `${baseItemClass} workout-cancel-btn`; 
+            workoutCancelItem.textContent = '운동 취소'; 
+            workoutCancelItem.disabled = (member.count - member.overtimeCount) <= 0; 
+            workoutCancelItem.onclick = () => { updateRecord(member.id, 'workout', -1); toggleDropdown(member.id, true); }; 
+            dropdownMenu.appendChild(workoutCancelItem); 
+            const overtimeCancelItem = document.createElement('button'); 
+            overtimeCancelItem.className = `${baseItemClass} overtime-cancel-btn`; 
+            overtimeCancelItem.textContent = '야근 취소'; 
+            overtimeCancelItem.disabled = member.overtimeCount <= 0; 
+            overtimeCancelItem.onclick = () => { updateRecord(member.id, 'overtime', -1); toggleDropdown(member.id, true); }; 
+            dropdownMenu.appendChild(overtimeCancelItem); 
+            const restCancelItem = document.createElement('button'); 
+            restCancelItem.className = `${baseItemClass} rest-cancel-btn`; 
+            restCancelItem.textContent = '휴식 취소'; 
+            restCancelItem.disabled = member.restCount <= 0; 
+            restCancelItem.onclick = () => { updateRecord(member.id, 'rest', -1); toggleDropdown(member.id, true); }; 
+            dropdownMenu.appendChild(restCancelItem); 
+            return dropdownMenu; 
         } 
         
         function toggleDropdown(id, forceClose = false) { 
-            // ... (previous implementation)
+            const dropdown = document.getElementById(`dropdown-${id}`); 
+            if (!dropdown) return; 
+            document.querySelectorAll('[id^="dropdown-"]').forEach(d => { 
+                if (d.id !== `dropdown-${id}`) d.classList.add('hidden'); 
+            }); 
+            if (forceClose) dropdown.classList.add('hidden'); 
+            else dropdown.classList.toggle('hidden'); 
         } 
 
         function updateRecord(id, type, amount) {
-            // ... (previous implementation)
+            const memberDoc = membersCollection.doc(id);
+            const valueToUpdate = firebase.firestore.FieldValue.increment(amount);
+
+            if (type === 'workout') {
+                const member = members.find(m => m.id === id);
+                if (amount < 0 && (!member || (member.count - member.overtimeCount) <= 0)) return; 
+                memberDoc.update({ count: valueToUpdate });
+            } else if (type === 'overtime') {
+                const member = members.find(m => m.id === id);
+                if (amount < 0 && (!member || member.overtimeCount <= 0)) return;
+                memberDoc.update({ count: valueToUpdate, overtimeCount: valueToUpdate });
+            } else if (type === 'rest') {
+                const member = members.find(m => m.id === id);
+                if (amount < 0 && (!member || member.restCount <= 0)) return;
+                memberDoc.update({ restCount: valueToUpdate });
+            }
         }
 
         function addMember(name) { 
-            // ... (previous implementation)
+            if (name && isAdmin) { 
+                membersCollection.add({
+                    name: name,
+                    count: 0,
+                    overtimeCount: 0,
+                    restCount: 0,
+                }).catch(error => console.error("Error adding member: ", error));
+            } 
         } 
 
         function resetAllData() {
-            // ... (previous implementation)
+            // 1. Delete all photos
+            photosCollection.get().then(snapshot => {
+                const batch = db.batch();
+                snapshot.forEach(doc => {
+                    const path = doc.data().storagePath;
+                    if (path) {
+                        storage.ref(path).delete().catch(e => console.error("Failed to delete file:", e));
+                    }
+                    batch.delete(doc.ref);
+                });
+                return batch.commit();
+            });
+            // 2. Reset member counts
+            membersCollection.get().then(snapshot => {
+                const batch = db.batch();
+                snapshot.forEach(doc => {
+                    batch.update(doc.ref, { count: 0, overtimeCount: 0, restCount: 0 });
+                });
+                return batch.commit();
+            });
         } 
 
         function copyStatus() { 
-            // ... (previous implementation)
+            const weeklyGoal = getWeeklyGoal(); 
+            const monthNumber = document.getElementById('month-number').textContent || '00'; 
+            const weekNumber = weekNumberEl.textContent || '0'; 
+            const startDate = startDateInput.value; 
+            const endDate = endDateInput.value; 
+            const formattedStartDate = startDate ? startDate.replaceAll('-', '.') : '시작일'; 
+            const formattedEndDate = endDate ? endDate.replaceAll('-', '.') : '종료일'; 
+            const dateRangeText = `${formattedStartDate} ~ ${formattedEndDate}`; 
+            let textToCopy = ``; 
+            if (currentPage === 'status') { 
+                textToCopy = `[${monthNumber}월 (${weekNumber}주) 운동 현황 (${dateRangeText})]\n\n`; 
+                const sortedMembers = [...members].sort((a,b) => { 
+                    if(b.count !== a.count) return b.count - a.count; 
+                    return a.overtimeCount - b.overtimeCount;
+                });
+                sortedMembers.forEach((member, index) => { 
+                    let status = `#${index + 1} ${member.name}: ${member.count}회 / ${weeklyGoal}회`; 
+                    const subTextParts = []; 
+                    if (member.overtimeCount > 0) subTextParts.push(`야근 ${member.overtimeCount}회`); 
+                    if (member.restCount > 0) subTextParts.push(`휴식 ${member.restCount}회`); 
+                    if (subTextParts.length > 0) status += ` (${subTextParts.join(', ')})`; 
+                    textToCopy += status + '\n'; 
+                }); 
+            } else if (currentPage === 'ranking') { 
+                textToCopy = `[${monthNumber}월 (${weekNumber}주) 랭킹 (${dateRangeText})]\n\n`; 
+                const rankedMembers = members.map(member => ({...member, points: calculatePoints(member)})).sort((a, b) => { 
+                    if(b.points !== a.points) return b.points - a.points; 
+                    return a.overtimeCount - b.overtimeCount; 
+                }); 
+                rankedMembers.forEach((member, index) => { 
+                    let rankText = `#${index + 1} ${member.name}: ${member.points}pt`; 
+                    if (index === 0) rankText = `🥇 ${rankText}`; 
+                    if (index === 1) rankText = `🥈 ${rankText}`; 
+                    if (index === 2) rankText = `🥉 ${rankText}`; 
+                    textToCopy += rankText + '\n'; 
+                }); 
+            } 
+            const textarea = document.createElement('textarea'); 
+            textarea.value = textToCopy; 
+            document.body.appendChild(textarea); 
+            textarea.select(); 
+            document.execCommand('copy'); 
+            document.body.removeChild(textarea); 
+            showToast('클립보드에 복사되었습니다!');
         } 
 
         function logout() {
