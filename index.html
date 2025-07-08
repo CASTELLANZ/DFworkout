@@ -913,6 +913,32 @@
             }, error => {
                 console.error("Error fetching members: ", error);
             });
+
+            if (photosUnsubscribe) photosUnsubscribe();
+            const firstPhotoQuery = photosCollection.orderBy('createdAt', 'desc').limit(1);
+            photosUnsubscribe = firstPhotoQuery.onSnapshot(snapshot => {
+                snapshot.docChanges().forEach(change => {
+                    if (change.type === 'added') {
+                        const newPhoto = {id: change.doc.id, ...change.doc.data()};
+                        if (currentPage === 'certification' && !photos.some(p => p.id === newPhoto.id)) {
+                             const grid = document.getElementById('photo-grid');
+                             if (grid) {
+                                const emptyMessage = grid.querySelector('p');
+                                if (emptyMessage) emptyMessage.remove();
+                                grid.prepend(createPhotoElement(newPhoto));
+                                photos.unshift(newPhoto);
+                             }
+                        }
+                    }
+                    if (change.type === 'removed') {
+                        const photoDiv = document.querySelector(`[data-id="${change.doc.id}"]`).closest('.photo-grid-item');
+                        if(photoDiv) photoDiv.remove();
+                        photos = photos.filter(p => p.id !== change.doc.id);
+                    }
+                });
+            });
+            
+            switchPage('status'); 
         }
         
         window.onload = checkLogin;
