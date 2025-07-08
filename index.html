@@ -326,6 +326,16 @@
             return points; 
         } 
 
+        function renderCurrentPage() {
+            if (currentPage === 'status') {
+                renderStatusPage();
+            } else if (currentPage === 'certification') {
+                renderCertificationPage();
+            } else if (currentPage === 'ranking') {
+                renderRankingPage();
+            }
+        }
+
         function switchPage(page) { 
             currentPage = page;
             const tabs = [statusTabBtn, certificationTabBtn, rankingTabBtn];
