@@ -300,9 +300,7 @@
                 const weeks = Math.ceil(diffDays / 7); 
                 weekNumberEl.textContent = weeks; 
             } 
-            if (currentPage === 'status') renderStatusPage(); 
-            else if (currentPage === 'certification') renderCertificationPage();
-            else renderRankingPage(); 
+            switchPage(currentPage);
         } 
 
         function getWeeklyGoal() { 
@@ -332,6 +330,7 @@
             currentPage = page;
             const tabs = [statusTabBtn, certificationTabBtn, rankingTabBtn];
             
+            if (membersUnsubscribe) membersUnsubscribe();
             if (photosUnsubscribe) photosUnsubscribe();
 
             tabs.forEach(tab => {
@@ -347,6 +346,7 @@
             if (page === 'status') {
                 statusTabBtn.classList.add('custom-teal-text', 'border-b-2', 'border-current', 'font-extrabold');
                 statusTabBtn.classList.remove('text-gray-500');
+                if (isAdmin) addMemberContainer.style.display = 'block';
                 renderStatusPage();
             } else if (page === 'certification') {
                 certificationTabBtn.classList.add('custom-teal-text', 'border-b-2', 'border-current', 'font-extrabold');
@@ -621,19 +621,13 @@
         function initializeApp() {
             loadGuideContent();
             loadDates();
-
+            
+            // Centralized listener for members
             if (membersUnsubscribe) membersUnsubscribe();
             membersUnsubscribe = membersCollection.onSnapshot(snapshot => {
-                let fetchedMembers = [];
-                snapshot.forEach(doc => {
-                    fetchedMembers.push({ id: doc.id, ...doc.data() });
-                });
-                members = fetchedMembers;
-                if(currentPage === 'status') {
-                    renderStatusPage();
-                } else if (currentPage === 'ranking') {
-                    renderRankingPage();
-                }
+                members = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                // Re-render the current page with new data
+                switchPage(currentPage);
             }, error => {
                 console.error("Error fetching members: ", error);
             });
