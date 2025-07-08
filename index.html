@@ -368,7 +368,7 @@
             
             members.sort((a, b) => { 
                 if (b.count !== a.count) return b.count - a.count; 
-                return a.name.localeCompare(b.name, 'ko');
+                return a.overtimeCount - b.overtimeCount;
             }); 
             
             contentArea.innerHTML = '';
