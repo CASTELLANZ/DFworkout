@@ -1,41 +1,41 @@
-<!DOCTYPE html> 
- <html lang="ko"> 
- <head> 
-    <meta charset="UTF-8"> 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0"> 
-    <title>운동 현황</title> 
-    <script src="https://cdn.tailwindcss.com"></script> 
-    <link rel="preconnect" href="https://fonts.googleapis.com"> 
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin> 
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet"> 
-    <style> 
-        html, body { 
-            font-family: 'Noto Sans KR', sans-serif; 
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <title>운동 현황</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        html, body {
+            font-family: 'Noto Sans KR', sans-serif;
             overflow-x: hidden;
-        } 
+        }
         :root {
             --main-bg-color: #2c5282;
             --main-text-color: #2c5282;
         }
-        .custom-teal { background-color: var(--main-bg-color); color: white; } 
-        .custom-teal-border { border-color: var(--main-text-color); color: var(--main-text-color); } 
-        .custom-teal-text { color: var(--main-text-color); } 
-        [contenteditable]:focus { outline: none; box-shadow: 0 0 0 2px rgba(44, 82, 130, 0.5); border-radius: 4px; } 
-        [contenteditable="true"]:empty:before{ content: attr(placeholder); color: #9ca3af; font-weight: normal; } 
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); justify-content: center; align-items: center; z-index: 1000; } 
-        input[type="date"] { position: relative; background-color: transparent; border: none; color: #6b7280; padding: 0; } 
-        input[type="date"]:focus { outline: none; } 
-        input[type="date"]::-webkit-calendar-picker-indicator { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: transparent; color: transparent; cursor: pointer; } 
+        .custom-teal { background-color: var(--main-bg-color); color: white; }
+        .custom-teal-border { border-color: var(--main-text-color); color: var(--main-text-color); }
+        .custom-teal-text { color: var(--main-text-color); }
+        [contenteditable]:focus { outline: none; box-shadow: 0 0 0 2px rgba(44, 82, 130, 0.5); border-radius: 4px; }
+        [contenteditable="true"]:empty:before{ content: attr(placeholder); color: #9ca3af; font-weight: normal; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); justify-content: center; align-items: center; z-index: 1000; }
+        input[type="date"] { position: relative; background-color: transparent; border: none; color: #6b7280; padding: 0; }
+        input[type="date"]:focus { outline: none; }
+        input[type="date"]::-webkit-calendar-picker-indicator { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: transparent; color: transparent; cursor: pointer; }
         .member-item { transition: transform 0.5s ease-in-out, opacity 0.5s ease-in-out; }
         .photo-grid-item { aspect-ratio: 1 / 1; }
-    </style> 
- </head> 
- <body class="bg-white"> 
+    </style>
+</head>
+<body class="bg-white">
 
-    <div class="w-full max-w-md mx-auto p-4"> 
+    <div class="w-full max-w-md mx-auto p-4">
         <div class="absolute top-4 right-4 flex items-center gap-2 z-20">
             <button id="logout-btn" class="text-xs text-gray-500 hover:underline">로그아웃</button>
-            <button id="guide-btn" class="w-6 h-6 bg-gray-200 text-gray-600 rounded-full flex items-center justify-center font-bold text-sm hover:bg-gray-300 transition-colors">i</button> 
+            <button id="guide-btn" class="w-6 h-6 bg-gray-200 text-gray-600 rounded-full flex items-center justify-center font-bold text-sm hover:bg-gray-300 transition-colors">i</button>
         </div>
 
         <header class="flex flex-col items-center text-center mb-12 pt-4">
@@ -58,27 +58,26 @@
             </div>
         </header>
 
-        <div class="flex mb-6 border-b"> 
-            <button id="certification-tab-btn" class="flex-1 py-2 text-center font-bold border-b-2 border-transparent">인증</button> 
-            <button id="status-tab-btn" class="flex-1 py-2 text-center font-bold border-b-2 border-transparent">현황</button> 
-            <button id="ranking-tab-btn" class="flex-1 py-2 text-center font-bold border-b-2 border-transparent">랭킹</button> 
-        </div> 
-
-        <main id="content-area" class="space-y-4"></main> 
-
-        <div id="add-member-container" class="text-center mt-4"> 
-            <button id="add-member-btn" class="text-sm custom-teal-text font-semibold hover:underline">멤버 추가</button> 
+        <div class="flex mb-6 border-b">
+            <button id="certification-tab-btn" class="flex-1 py-2 text-center font-bold border-b-2 border-transparent">인증</button>
+            <button id="status-tab-btn" class="flex-1 py-2 text-center font-bold border-b-2 border-transparent">현황</button>
+            <button id="ranking-tab-btn" class="flex-1 py-2 text-center font-bold border-b-2 border-transparent">랭킹</button>
         </div>
 
-        <hr id="main-divider" class="my-6"> 
+        <main id="content-area" class="space-y-4"></main>
 
-        <footer id="main-footer" class="flex justify-end gap-4"> 
-            <button id="reset-btn" class="py-3 px-6 rounded-lg font-bold bg-gray-200 text-gray-700">기록 초기화</button> 
-            <button id="copy-btn" class="py-3 px-6 rounded-lg font-bold custom-teal">현황 복사</button> 
-        </footer> 
-    </div> 
+        <div id="add-member-container" class="text-center mt-4">
+            <button id="add-member-btn" class="text-sm custom-teal-text font-semibold hover:underline">멤버 추가</button>
+        </div>
 
-    <!-- UI Modals & Overlays -->
+        <hr id="main-divider" class="my-6">
+
+        <footer id="main-footer" class="flex justify-end gap-4">
+            <button id="reset-btn" class="py-3 px-6 rounded-lg font-bold bg-gray-200 text-gray-700">기록 초기화</button>
+            <button id="copy-btn" class="py-3 px-6 rounded-lg font-bold custom-teal">현황 복사</button>
+        </footer>
+    </div>
+
     <div id="login-modal" class="modal-overlay">
         <div class="bg-white p-6 rounded-lg shadow-xl text-center w-11/12 max-w-xs">
             <p class="mb-4 font-semibold">사용자 이름을 입력하세요.</p>
@@ -94,59 +93,58 @@
         </div>
     </div>
 
-    <div id="toast-message" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg opacity-0 transition-opacity duration-300 text-sm whitespace-nowrap"></div> 
-    <div id="guide-modal" class="modal-overlay"> 
-        <div class="bg-white p-6 rounded-lg shadow-xl w-11/12 max-w-lg relative"> 
-            <button id="close-guide-btn" class="absolute top-2 right-3 text-3xl font-light text-gray-500 hover:text-gray-800">&times;</button> 
-            <h2 class="text-2xl font-bold mb-4 text-center">가이드</h2> 
-            <div class="space-y-4 text-left max-h-[70vh] overflow-y-auto pr-2"> 
-                <div> 
-                    <h3 class="font-semibold text-lg text-gray-800">참고사항</h3> 
-                    <ul class="list-disc list-inside text-sm text-gray-600 mt-2 space-y-1"> 
-                        <li>랭킹은 목표를 초과 달성한 '순수 운동' 횟수로 계산된 '포인트' 기준입니다.</li> 
-                        <li>'야근'으로 올린 횟수는 총 횟수에는 포함되지만, 랭킹 포인트에는 반영되지 않습니다.</li> 
-                        <li>포인트 동점 시, '야근' 횟수가 적은 사람이 더 높은 순위를 가집니다.</li> 
-                        <li>총 횟수 동점 시에도 '야근' 횟수가 적은 사람이 더 높은 순위를 가집니다.</li> 
-                    </ul> 
-                </div> 
-                <hr class="my-3"> 
-                <div> 
-                    <h3 class="font-semibold text-lg text-gray-800">운영 가이드</h3> 
-                    <div id="custom-guide-area" contenteditable="true" class="mt-2 p-3 border rounded-md min-h-[150px] text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-teal-500" placeholder="여기를 클릭해서 자유롭게 규칙을 입력하세요..."></div> 
-                </div> 
+    <div id="toast-message" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg opacity-0 transition-opacity duration-300 text-sm whitespace-nowrap"></div>
+    <div id="guide-modal" class="modal-overlay">
+        <div class="bg-white p-6 rounded-lg shadow-xl w-11/12 max-w-lg relative">
+            <button id="close-guide-btn" class="absolute top-2 right-3 text-3xl font-light text-gray-500 hover:text-gray-800">&times;</button>
+            <h2 class="text-2xl font-bold mb-4 text-center">가이드</h2>
+            <div class="space-y-4 text-left max-h-[70vh] overflow-y-auto pr-2">
+                <div>
+                    <h3 class="font-semibold text-lg text-gray-800">참고사항</h3>
+                    <ul class="list-disc list-inside text-sm text-gray-600 mt-2 space-y-1">
+                        <li>랭킹은 목표를 초과 달성한 '순수 운동' 횟수로 계산된 '포인트' 기준입니다.</li>
+                        <li>'야근'으로 올린 횟수는 총 횟수에는 포함되지만, 랭킹 포인트에는 반영되지 않습니다.</li>
+                        <li>포인트 동점 시, '야근' 횟수가 적은 사람이 더 높은 순위를 가집니다.</li>
+                        <li>총 횟수 동점 시에도 '야근' 횟수가 적은 사람이 더 높은 순위를 가집니다.</li>
+                    </ul>
+                </div>
+                <hr class="my-3">
+                <div>
+                    <h3 class="font-semibold text-lg text-gray-800">운영 가이드</h3>
+                    <div id="custom-guide-area" contenteditable="true" class="mt-2 p-3 border rounded-md min-h-[150px] text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-teal-500" placeholder="여기를 클릭해서 자유롭게 규칙을 입력하세요..."></div>
+                </div>
             </div>
             <div class="flex justify-end items-center mt-4 gap-3">
                 <span id="guide-save-feedback" class="text-sm text-green-500 opacity-0 transition-opacity duration-300">저장 완료!</span>
                 <button id="save-guide-btn" class="px-4 py-2 custom-teal text-white rounded-lg font-semibold">저장</button>
             </div>
-        </div> 
-    </div> 
-    <div id="reset-confirm-modal" class="modal-overlay"> 
-        <div class="bg-white p-6 rounded-lg shadow-xl text-center"> 
-            <p class="mb-4">정말로 모든 기록을 초기화하시겠습니까?<br><span class="text-red-500 text-sm">(인증 사진도 모두 삭제됩니다)</span></p> 
-            <div class="flex justify-center gap-4"> 
-                <button id="confirm-reset-btn" class="px-4 py-2 bg-red-500 text-white rounded-lg">예</button> 
-                <button id="cancel-reset-btn" class="px-4 py-2 bg-gray-200 rounded-lg">아니오</button> 
-            </div> 
-        </div> 
-    </div> 
-    <div id="add-member-modal" class="modal-overlay"> 
-        <div class="bg-white p-6 rounded-lg shadow-xl text-center"> 
-            <p class="mb-4 font-semibold">추가할 멤버의 이름을 입력하세요.</p> 
-            <input type="text" id="new-member-name" class="border-2 border-gray-300 p-2 rounded-lg w-full mb-4" placeholder="이름"> 
-            <div class="flex justify-center gap-4"> 
-                <button id="confirm-add-btn" class="px-4 py-2 custom-teal text-white rounded-lg">추가</button> 
-                <button id="cancel-add-btn" class="px-4 py-2 bg-gray-200 rounded-lg">취소</button> 
-            </div> 
-        </div> 
-    </div> 
+        </div>
+    </div>
+    <div id="reset-confirm-modal" class="modal-overlay">
+        <div class="bg-white p-6 rounded-lg shadow-xl text-center">
+            <p class="mb-4">정말로 모든 기록을 초기화하시겠습니까?<br><span class="text-red-500 text-sm">(인증 사진도 모두 삭제됩니다)</span></p>
+            <div class="flex justify-center gap-4">
+                <button id="confirm-reset-btn" class="px-4 py-2 bg-red-500 text-white rounded-lg">예</button>
+                <button id="cancel-reset-btn" class="px-4 py-2 bg-gray-200 rounded-lg">아니오</button>
+            </div>
+        </div>
+    </div>
+    <div id="add-member-modal" class="modal-overlay">
+        <div class="bg-white p-6 rounded-lg shadow-xl text-center">
+            <p class="mb-4 font-semibold">추가할 멤버의 이름을 입력하세요.</p>
+            <input type="text" id="new-member-name" class="border-2 border-gray-300 p-2 rounded-lg w-full mb-4" placeholder="이름">
+            <div class="flex justify-center gap-4">
+                <button id="confirm-add-btn" class="px-4 py-2 custom-teal text-white rounded-lg">추가</button>
+                <button id="cancel-add-btn" class="px-4 py-2 bg-gray-200 rounded-lg">취소</button>
+            </div>
+        </div>
+    </div>
 
-    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
 
-    <script> 
+    <script>
         // --- Firebase Config ---
         const firebaseConfig = {
             apiKey: "__FIREBASE_API_KEY__",
@@ -172,33 +170,33 @@
         let photos = [];
         let lastVisiblePhotoDoc = null;
         let isFetchingPhotos = false;
-        let photosUnsubscribe = null;
+        let photosUnsubscribe = null; // ◀◀◀ 수정됨
         let membersUnsubscribe = null;
         let currentUser = null;
         let isAdmin = false;
-        
+
         // --- DOM Elements ---
-        const contentArea = document.getElementById('content-area'); 
-        const statusTabBtn = document.getElementById('status-tab-btn'); 
+        const contentArea = document.getElementById('content-area');
+        const statusTabBtn = document.getElementById('status-tab-btn');
         const certificationTabBtn = document.getElementById('certification-tab-btn');
-        const rankingTabBtn = document.getElementById('ranking-tab-btn'); 
+        const rankingTabBtn = document.getElementById('ranking-tab-btn');
         const mainFooter = document.getElementById('main-footer');
         const mainDivider = document.getElementById('main-divider');
-        const resetBtn = document.getElementById('reset-btn'); 
-        const copyBtn = document.getElementById('copy-btn'); 
-        const toastMessage = document.getElementById('toast-message'); 
-        const monthNumberEl = document.getElementById('month-number'); 
-        const weekNumberEl = document.getElementById('week-number'); 
-        const startDateInput = document.getElementById('start-date'); 
-        const endDateInput = document.getElementById('end-date'); 
-        const guideBtn = document.getElementById('guide-btn'); 
+        const resetBtn = document.getElementById('reset-btn');
+        const copyBtn = document.getElementById('copy-btn');
+        const toastMessage = document.getElementById('toast-message');
+        const monthNumberEl = document.getElementById('month-number');
+        const weekNumberEl = document.getElementById('week-number');
+        const startDateInput = document.getElementById('start-date');
+        const endDateInput = document.getElementById('end-date');
+        const guideBtn = document.getElementById('guide-btn');
         const logoutBtn = document.getElementById('logout-btn');
-        const guideModal = document.getElementById('guide-modal'); 
-        const closeGuideBtn = document.getElementById('close-guide-btn'); 
+        const guideModal = document.getElementById('guide-modal');
+        const closeGuideBtn = document.getElementById('close-guide-btn');
         const saveGuideBtn = document.getElementById('save-guide-btn');
-        const resetConfirmModal = document.getElementById('reset-confirm-modal'); 
-        const confirmResetBtn = document.getElementById('confirm-reset-btn'); 
-        const cancelResetBtn = document.getElementById('cancel-reset-btn'); 
+        const resetConfirmModal = document.getElementById('reset-confirm-modal');
+        const confirmResetBtn = document.getElementById('confirm-reset-btn');
+        const cancelResetBtn = document.getElementById('cancel-reset-btn');
         const loginModal = document.getElementById('login-modal');
         const loginNameInput = document.getElementById('login-name-input');
         const loginConfirmBtn = document.getElementById('login-confirm-btn');
@@ -212,7 +210,7 @@
         const cancelAddBtn = document.getElementById('cancel-add-btn');
         const newMemberNameInput = document.getElementById('new-member-name');
 
-        // --- Functions --- 
+        // --- Functions ---
 
         function showToast(message) {
             toastMessage.textContent = message;
@@ -254,79 +252,79 @@
                     const data = doc.data();
                     if(data.startDate) startDateInput.value = data.startDate;
                     if(data.endDate) endDateInput.value = data.endDate;
-                    updateDateBasedInfo(false); 
+                    updateDateBasedInfo(false);
                 }
             }).catch(error => {
                 console.error("날짜 불러오기 실패:", error);
             });
         }
 
-        function updateDateBasedInfo(resetPhotos = true) { 
-            const startDateVal = startDateInput.value; 
-            const endDateVal = endDateInput.value; 
-            if (!startDateVal || !endDateVal) return; 
-            
-            const startDate = new Date(startDateVal); 
-            const endDate = new Date(endDateVal); 
+        function updateDateBasedInfo(resetPhotos = true) {
+            const startDateVal = startDateInput.value;
+            const endDateVal = endDateInput.value;
+            if (!startDateVal || !endDateVal) return;
 
-            if (endDate < startDate) { 
-                weekNumberEl.textContent = '0'; 
-                monthNumberEl.textContent = '00'; 
-            } else { 
-                dateDoc.set({ 
+            const startDate = new Date(startDateVal);
+            const endDate = new Date(endDateVal);
+
+            if (endDate < startDate) {
+                weekNumberEl.textContent = '0';
+                monthNumberEl.textContent = '00';
+            } else {
+                dateDoc.set({
                     startDate: startDateVal,
                     endDate: endDateVal
                 }).then(() => {
                     if (resetPhotos && isAdmin) {
-                        openModal(resetConfirmModal); 
+                        openModal(resetConfirmModal);
                     }
                 }).catch(error => console.error("날짜 저장 실패:", error));
 
-                const monthCounts = {}; 
-                let currentDate = new Date(startDate); 
-                while (currentDate <= endDate) { 
+                const monthCounts = {};
+                let currentDate = new Date(startDate);
+                while (currentDate <= endDate) {
                     const month = currentDate.getMonth();
-                    monthCounts[month] = (monthCounts[month] || 0) + 1; 
-                    currentDate.setDate(currentDate.getDate() + 1); 
-                } 
-                let dominantMonth = -1, maxDays = -1; 
-                for (const month in monthCounts) { 
-                    if (monthCounts[month] > maxDays) { 
-                        maxDays = monthCounts[month]; 
-                        dominantMonth = parseInt(month, 10); 
-                    } 
-                } 
-                monthNumberEl.textContent = String(dominantMonth + 1).padStart(2, '0'); 
-                const diffTime = endDate.getTime() - startDate.getTime(); 
-                const diffDays = (diffTime / (1000 * 60 * 60 * 24)) + 1; 
-                const weeks = Math.ceil(diffDays / 7); 
-                weekNumberEl.textContent = weeks; 
-            } 
+                    monthCounts[month] = (monthCounts[month] || 0) + 1;
+                    currentDate.setDate(currentDate.getDate() + 1);
+                }
+                let dominantMonth = -1, maxDays = -1;
+                for (const month in monthCounts) {
+                    if (monthCounts[month] > maxDays) {
+                        maxDays = monthCounts[month];
+                        dominantMonth = parseInt(month, 10);
+                    }
+                }
+                monthNumberEl.textContent = String(dominantMonth + 1).padStart(2, '0');
+                const diffTime = endDate.getTime() - startDate.getTime();
+                const diffDays = (diffTime / (1000 * 60 * 60 * 24)) + 1;
+                const weeks = Math.ceil(diffDays / 7);
+                weekNumberEl.textContent = weeks;
+            }
             renderCurrentPage();
-        } 
+        }
 
-        function getWeeklyGoal() { 
-            const weekNumber = parseInt(weekNumberEl.textContent, 10); 
-            return (isNaN(weekNumber) || weekNumber < 1) ? 4 : 4 * weekNumber; 
-        } 
+        function getWeeklyGoal() {
+            const weekNumber = parseInt(weekNumberEl.textContent, 10);
+            return (isNaN(weekNumber) || weekNumber < 1) ? 4 : 4 * weekNumber;
+        }
 
-        function calculatePoints(member) { 
-            const goalCount = getWeeklyGoal(); 
-            const weekNumber = parseInt(weekNumberEl.textContent, 10) || 1; 
+        function calculatePoints(member) {
+            const goalCount = getWeeklyGoal();
+            const weekNumber = parseInt(weekNumberEl.textContent, 10) || 1;
             const pureCount = member.count - member.overtimeCount;
-            let points = 0; 
-            if (pureCount > goalCount) { 
-                const firstTierLimit = goalCount + weekNumber; 
-                if (pureCount <= firstTierLimit) { 
-                    points = (pureCount - goalCount) * 0.5; 
-                } else { 
-                    const firstTierPoints = (firstTierLimit - goalCount) * 0.5; 
-                    const secondTierCounts = pureCount - firstTierLimit; 
-                    points = firstTierPoints + (secondTierCounts * 1); 
-                } 
-            } 
-            return points; 
-        } 
+            let points = 0;
+            if (pureCount > goalCount) {
+                const firstTierLimit = goalCount + weekNumber;
+                if (pureCount <= firstTierLimit) {
+                    points = (pureCount - goalCount) * 0.5;
+                } else {
+                    const firstTierPoints = (firstTierLimit - goalCount) * 0.5;
+                    const secondTierCounts = pureCount - firstTierLimit;
+                    points = firstTierPoints + (secondTierCounts * 1);
+                }
+            }
+            return points;
+        }
 
         function renderCurrentPage() {
             if (currentPage === 'status') {
@@ -337,20 +335,21 @@
                 renderRankingPage();
             }
         }
-
-        function switchPage(page) { 
+        
+        // ◀◀◀ 전체 함수가 효율적으로 수정됨
+        function switchPage(page) {
             currentPage = page;
             const tabs = [statusTabBtn, certificationTabBtn, rankingTabBtn];
-            
+        
             tabs.forEach(tab => {
                 tab.classList.remove('custom-teal-text', 'border-b-2', 'border-current', 'font-extrabold');
                 tab.classList.add('text-gray-500');
             });
-
+        
             const showFooter = page === 'status' || page === 'ranking';
             mainFooter.style.display = showFooter ? 'flex' : 'none';
             mainDivider.style.display = showFooter ? 'block' : 'none';
-            
+        
             if (page === 'status') {
                 statusTabBtn.classList.add('custom-teal-text', 'border-b-2', 'border-current', 'font-extrabold');
                 statusTabBtn.classList.remove('text-gray-500');
@@ -358,28 +357,39 @@
             } else if (page === 'certification') {
                 certificationTabBtn.classList.add('custom-teal-text', 'border-b-2', 'border-current', 'font-extrabold');
                 certificationTabBtn.classList.remove('text-gray-500');
-                renderCertificationPage();
+        
+                // 사진 데이터가 아직 로드되지 않았을 경우에만 실행
+                if (photos.length === 0) {
+                    lastVisiblePhotoDoc = null;
+                    isFetchingPhotos = false;
+                    renderCertificationPage(); // 먼저 빈 화면을 그리고
+                    loadPhotos(false);       // 그 다음에 데이터를 불러옵니다.
+                } else {
+                    // 이미 데이터가 있다면, 불러오지 않고 그냥 화면만 다시 그립니다.
+                    renderCertificationPage();
+                }
+        
             } else if (page === 'ranking') {
                 rankingTabBtn.classList.add('custom-teal-text', 'border-b-2', 'border-current', 'font-extrabold');
                 rankingTabBtn.classList.remove('text-gray-500');
-                renderRankingPage(); 
+                renderRankingPage();
             }
-        } 
+        }
 
-        function renderStatusPage() { 
+        function renderStatusPage() {
             const oldOrderMap = new Map(
                 Array.from(contentArea.querySelectorAll('.member-item')).map((el, index) => [el.dataset.id, index])
             );
-            const firstPositions = {}; 
-            contentArea.querySelectorAll('.member-item').forEach(el => { 
-                firstPositions[el.dataset.id] = el.getBoundingClientRect(); 
-            }); 
-            
-            members.sort((a, b) => { 
-                if (b.count !== a.count) return b.count - a.count; 
+            const firstPositions = {};
+            contentArea.querySelectorAll('.member-item').forEach(el => {
+                firstPositions[el.dataset.id] = el.getBoundingClientRect();
+            });
+
+            members.sort((a, b) => {
+                if (b.count !== a.count) return b.count - a.count;
                 return a.overtimeCount - b.overtimeCount;
-            }); 
-            
+            });
+
             contentArea.innerHTML = '';
             addMemberContainer.style.display = isAdmin ? 'block' : 'none';
 
@@ -388,11 +398,11 @@
                 return;
             }
 
-            members.forEach((member, index) => { 
+            members.forEach((member, index) => {
                 const canEdit = isAdmin || currentUser === member.name;
-                const subTextParts = []; 
-                if (member.overtimeCount > 0) subTextParts.push(`야근 ${member.overtimeCount}회`); 
-                if (member.restCount > 0) subTextParts.push(`휴식 ${member.restCount}회`); 
+                const subTextParts = [];
+                if (member.overtimeCount > 0) subTextParts.push(`야근 ${member.overtimeCount}회`);
+                if (member.restCount > 0) subTextParts.push(`휴식 ${member.restCount}회`);
                 const subText = subTextParts.length > 0 ? `(${subTextParts.join(', ')})` : '';
 
                 const memberDiv = document.createElement('div');
@@ -416,7 +426,7 @@
                         </div>
                     </div>
                 `;
-                
+
                 const nameSpan = memberDiv.querySelector('.font-bold.text-lg');
                 nameSpan.onblur = (e) => {
                     if (canEdit) {
@@ -429,62 +439,62 @@
                 memberDiv.querySelector('.plus-btn').onclick = () => updateRecord(member.id, 'workout', 1);
                 const etcButton = memberDiv.querySelector('.etc-btn');
                 etcButton.onclick = (e) => { e.stopPropagation(); toggleDropdown(member.id); };
-                
+
                 const etcContainer = etcButton.parentElement;
                 etcContainer.appendChild(createDropdownMenu(member));
 
                 contentArea.appendChild(memberDiv);
-            }); 
-            
-            contentArea.querySelectorAll('.member-item').forEach((el, newIndex) => { 
-                const id = el.dataset.id; 
-                const oldIndex = oldOrderMap.get(id);
-                
-                if (oldIndex !== undefined && oldIndex !== newIndex) {
-                    const first = firstPositions[id]; 
-                    if (!first) return; 
-                    const last = el.getBoundingClientRect(); 
-                    const dx = first.left - last.left; 
-                    const dy = first.top - last.top; 
+            });
 
-                    if (Math.abs(dx) > 0.1 || Math.abs(dy) > 0.1) { 
-                        el.style.transform = `translate(${dx}px, ${dy}px)`; 
-                        el.style.transition = 'transform 0s'; 
-                        requestAnimationFrame(() => { 
-                            el.style.transform = ''; 
-                            el.style.transition = 'transform 0.5s ease-in-out'; 
-                        }); 
+            contentArea.querySelectorAll('.member-item').forEach((el, newIndex) => {
+                const id = el.dataset.id;
+                const oldIndex = oldOrderMap.get(id);
+
+                if (oldIndex !== undefined && oldIndex !== newIndex) {
+                    const first = firstPositions[id];
+                    if (!first) return;
+                    const last = el.getBoundingClientRect();
+                    const dx = first.left - last.left;
+                    const dy = first.top - last.top;
+
+                    if (Math.abs(dx) > 0.1 || Math.abs(dy) > 0.1) {
+                        el.style.transform = `translate(${dx}px, ${dy}px)`;
+                        el.style.transition = 'transform 0s';
+                        requestAnimationFrame(() => {
+                            el.style.transform = '';
+                            el.style.transition = 'transform 0.5s ease-in-out';
+                        });
                     }
                 }
-            }); 
-        } 
+            });
+        }
 
-        function renderRankingPage() { 
-            contentArea.innerHTML = ''; 
+        function renderRankingPage() {
+            contentArea.innerHTML = '';
             addMemberContainer.style.display = 'none';
 
             if (!members || members.length === 0) {
                 contentArea.innerHTML = `<p class="text-center text-gray-500 py-8">멤버가 없어 랭킹을 표시할 수 없습니다.</p>`;
                 return;
             }
-            const rankedMembers = members.map(member => ({ 
-                ...member, 
-                points: calculatePoints(member) 
-            })).sort((a, b) => { 
-                if (b.points !== a.points) return b.points - a.points; 
+            const rankedMembers = members.map(member => ({
+                ...member,
+                points: calculatePoints(member)
+            })).sort((a, b) => {
+                if (b.points !== a.points) return b.points - a.points;
                 if (a.points === 0 && b.points === 0) {
                     if (b.count !== a.count) return b.count - a.count;
                 }
-                return a.overtimeCount - b.overtimeCount; 
-            }); 
-            const topRankers = rankedMembers.slice(0, 3); 
-            const otherRankers = rankedMembers.slice(3); 
-            const podium = document.createElement('div'); 
-            podium.className = 'flex justify-center items-end gap-2 mt-4 mb-8'; 
-            const displayOrder = [1, 0, 2]; 
-            const podiumHeights = ['h-32', 'h-24', 'h-20']; 
-            const podiumColors = ['bg-yellow-500', 'bg-gray-400', 'bg-yellow-600']; 
-            const podiumMedals = ['🥇', '🥈', '🥉']; 
+                return a.overtimeCount - b.overtimeCount;
+            });
+            const topRankers = rankedMembers.slice(0, 3);
+            const otherRankers = rankedMembers.slice(3);
+            const podium = document.createElement('div');
+            podium.className = 'flex justify-center items-end gap-2 mt-4 mb-8';
+            const displayOrder = [1, 0, 2];
+            const podiumHeights = ['h-32', 'h-24', 'h-20'];
+            const podiumColors = ['bg-yellow-500', 'bg-gray-400', 'bg-yellow-600'];
+            const podiumMedals = ['🥇', '🥈', '🥉'];
             displayOrder.forEach(orderIndex => {
                 const member = topRankers[orderIndex];
                 const rankIndex = member ? rankedMembers.indexOf(member) : -1;
@@ -499,7 +509,7 @@
                     else if (rankIndex === 1) heightClass = podiumHeights[1];
                     else if (rankIndex === 2) heightClass = podiumHeights[2];
                 }
-                
+
                 podiumBlock.className = `w-full ${heightClass} rounded-t-lg flex flex-col items-center justify-center p-2 text-white shadow-lg`;
                 if (member) {
                     nameSpan.textContent = member.name;
@@ -519,34 +529,34 @@
                 podiumUnitContainer.appendChild(podiumBlock);
                 podium.appendChild(podiumUnitContainer);
             });
-            contentArea.appendChild(podium); 
-            if (otherRankers.length > 0) { 
-                const listContainer = document.createElement('div'); 
-                listContainer.className = 'space-y-2'; 
-                otherRankers.forEach((member, index) => { 
-                    const rank = index + 4; 
-                    const listItem = document.createElement('div'); 
-                    listItem.className = 'flex items-center justify-between p-3 rounded-lg bg-gray-100'; 
-                    const leftDiv = document.createElement('div'); 
-                    leftDiv.className = 'flex items-center gap-3'; 
-                    const rankSpan = document.createElement('span'); 
-                    rankSpan.className = 'font-bold text-lg w-6 text-center text-gray-500'; 
-                    rankSpan.textContent = `#${rank}`; 
-                    leftDiv.appendChild(rankSpan); 
-                    const nameSpan = document.createElement('span'); 
-                    nameSpan.className = 'font-semibold text-gray-800'; 
-                    nameSpan.textContent = member.name; 
-                    leftDiv.appendChild(nameSpan); 
-                    listItem.appendChild(leftDiv); 
-                    const pointSpan = document.createElement('span'); 
-                    pointSpan.className = 'font-bold text-lg custom-teal-text'; 
-                    pointSpan.textContent = `${member.points}pt`; 
-                    listItem.appendChild(pointSpan); 
-                    listContainer.appendChild(listItem); 
-                }); 
-                contentArea.appendChild(listContainer); 
-            } 
-        } 
+            contentArea.appendChild(podium);
+            if (otherRankers.length > 0) {
+                const listContainer = document.createElement('div');
+                listContainer.className = 'space-y-2';
+                otherRankers.forEach((member, index) => {
+                    const rank = index + 4;
+                    const listItem = document.createElement('div');
+                    listItem.className = 'flex items-center justify-between p-3 rounded-lg bg-gray-100';
+                    const leftDiv = document.createElement('div');
+                    leftDiv.className = 'flex items-center gap-3';
+                    const rankSpan = document.createElement('span');
+                    rankSpan.className = 'font-bold text-lg w-6 text-center text-gray-500';
+                    rankSpan.textContent = `#${rank}`;
+                    leftDiv.appendChild(rankSpan);
+                    const nameSpan = document.createElement('span');
+                    nameSpan.className = 'font-semibold text-gray-800';
+                    nameSpan.textContent = member.name;
+                    leftDiv.appendChild(nameSpan);
+                    listItem.appendChild(leftDiv);
+                    const pointSpan = document.createElement('span');
+                    pointSpan.className = 'font-bold text-lg custom-teal-text';
+                    pointSpan.textContent = `${member.points}pt`;
+                    listItem.appendChild(pointSpan);
+                    listContainer.appendChild(listItem);
+                });
+                contentArea.appendChild(listContainer);
+            }
+        }
 
         function renderCertificationPage() {
             contentArea.innerHTML = `
@@ -559,19 +569,21 @@
                     <button id="load-more-photos-btn" class="text-sm custom-teal-text font-semibold hover:underline">더보기</button>
                 </div>
             `;
-            
+
             document.getElementById('photo-upload-input').addEventListener('change', handlePhotoUpload);
             document.getElementById('load-more-photos-btn').addEventListener('click', () => loadPhotos(true));
-            
+
             const grid = document.getElementById('photo-grid');
             if (!grid) return;
             grid.innerHTML = '';
 
             if (!photos || photos.length === 0) {
+                // 이 메시지는 loadPhotos가 실행되기 전에 잠깐 보이거나, 정말 사진이 없을 때 보입니다.
                 grid.innerHTML = `<p class="col-span-3 text-center text-gray-500 py-8">등록된 인증 사진이 없습니다.</p>`;
                 return;
             }
 
+            // 이미 photos 배열에 사진이 있다면(다른 탭 갔다 돌아온 경우) 즉시 렌더링합니다.
             photos.forEach(photo => {
                 const item = createPhotoElement(photo);
                 grid.appendChild(item);
@@ -589,27 +601,40 @@
 
             query.get().then(snapshot => {
                 const loadMoreBtn = document.getElementById('load-more-photos-btn');
+                const grid = document.getElementById('photo-grid');
+
                 if (snapshot.empty) {
                     if (loadMoreBtn) loadMoreBtn.style.display = 'none';
+                    // 만약 첫 로딩인데 비어있다면, 메시지를 표시합니다.
+                    if (!isLoadMore && grid) {
+                         grid.innerHTML = `<p class="col-span-3 text-center text-gray-500 py-8">등록된 인증 사진이 없습니다.</p>`;
+                    }
                     isFetchingPhotos = false;
                     return;
                 }
                 
+                // 첫 로딩일 경우, 기존에 있던 '사진 없음' 메시지를 지웁니다.
+                if (!isLoadMore && grid) {
+                    const emptyMsg = grid.querySelector('p');
+                    if (emptyMsg) emptyMsg.remove();
+                }
+
                 lastVisiblePhotoDoc = snapshot.docs[snapshot.docs.length - 1];
-                const grid = document.getElementById('photo-grid');
 
                 snapshot.forEach(doc => {
                     const photo = { id: doc.id, ...doc.data() };
                     photos.push(photo);
-                    const item = createPhotoElement(photo);
-                    grid.appendChild(item);
+                    if (grid) {
+                        const item = createPhotoElement(photo);
+                        grid.appendChild(item);
+                    }
                 });
-                
+
                 if (loadMoreBtn) loadMoreBtn.style.display = 'block';
                 isFetchingPhotos = false;
             });
         }
-        
+
         function createPhotoElement(photo) {
             const item = document.createElement('div');
             item.className = 'photo-grid-item relative bg-gray-200 cursor-pointer group';
@@ -642,7 +667,7 @@
             showToast('사진 업로드 중...');
             const filePath = `photos/${Date.now()}_${file.name}`;
             const fileRef = storage.ref(filePath);
-            
+
             fileRef.put(file).then(() => {
                 fileRef.getDownloadURL().then(url => {
                     photosCollection.add({
@@ -674,54 +699,54 @@
             });
         }
 
-        function createDropdownMenu(member) { 
-            const dropdownMenu = document.createElement('div'); 
-            dropdownMenu.id = `dropdown-${member.id}`; 
-            dropdownMenu.className = 'hidden absolute right-0 mt-2 w-32 bg-white rounded-md shadow-lg z-10'; 
-            const baseItemClass = 'block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed'; 
-            const overtimeItem = document.createElement('button'); 
-            overtimeItem.className = baseItemClass; 
-            overtimeItem.textContent = '야근'; 
-            overtimeItem.onclick = () => { updateRecord(member.id, 'overtime', 1); toggleDropdown(member.id, true); }; 
-            dropdownMenu.appendChild(overtimeItem); 
-            const restItem = document.createElement('button'); 
-            restItem.className = baseItemClass; 
-            restItem.textContent = '휴식'; 
-            restItem.onclick = () => { updateRecord(member.id, 'rest', 1); toggleDropdown(member.id, true); }; 
-            dropdownMenu.appendChild(restItem); 
-            const divider = document.createElement('hr'); 
-            divider.className = 'my-1'; 
-            dropdownMenu.appendChild(divider); 
-            const workoutCancelItem = document.createElement('button'); 
-            workoutCancelItem.className = `${baseItemClass} workout-cancel-btn`; 
-            workoutCancelItem.textContent = '운동 취소'; 
-            workoutCancelItem.disabled = (member.count - member.overtimeCount) <= 0; 
-            workoutCancelItem.onclick = () => { updateRecord(member.id, 'workout', -1); toggleDropdown(member.id, true); }; 
-            dropdownMenu.appendChild(workoutCancelItem); 
-            const overtimeCancelItem = document.createElement('button'); 
-            overtimeCancelItem.className = `${baseItemClass} overtime-cancel-btn`; 
-            overtimeCancelItem.textContent = '야근 취소'; 
-            overtimeCancelItem.disabled = member.overtimeCount <= 0; 
-            overtimeCancelItem.onclick = () => { updateRecord(member.id, 'overtime', -1); toggleDropdown(member.id, true); }; 
-            dropdownMenu.appendChild(overtimeCancelItem); 
-            const restCancelItem = document.createElement('button'); 
-            restCancelItem.className = `${baseItemClass} rest-cancel-btn`; 
-            restCancelItem.textContent = '휴식 취소'; 
-            restCancelItem.disabled = member.restCount <= 0; 
-            restCancelItem.onclick = () => { updateRecord(member.id, 'rest', -1); toggleDropdown(member.id, true); }; 
-            dropdownMenu.appendChild(restCancelItem); 
-            return dropdownMenu; 
-        } 
-        
-        function toggleDropdown(id, forceClose = false) { 
-            const dropdown = document.getElementById(`dropdown-${id}`); 
-            if (!dropdown) return; 
-            document.querySelectorAll('[id^="dropdown-"]').forEach(d => { 
-                if (d.id !== `dropdown-${id}`) d.classList.add('hidden'); 
-            }); 
-            if (forceClose) dropdown.classList.add('hidden'); 
-            else dropdown.classList.toggle('hidden'); 
-        } 
+        function createDropdownMenu(member) {
+            const dropdownMenu = document.createElement('div');
+            dropdownMenu.id = `dropdown-${member.id}`;
+            dropdownMenu.className = 'hidden absolute right-0 mt-2 w-32 bg-white rounded-md shadow-lg z-10';
+            const baseItemClass = 'block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed';
+            const overtimeItem = document.createElement('button');
+            overtimeItem.className = baseItemClass;
+            overtimeItem.textContent = '야근';
+            overtimeItem.onclick = () => { updateRecord(member.id, 'overtime', 1); toggleDropdown(member.id, true); };
+            dropdownMenu.appendChild(overtimeItem);
+            const restItem = document.createElement('button');
+            restItem.className = baseItemClass;
+            restItem.textContent = '휴식';
+            restItem.onclick = () => { updateRecord(member.id, 'rest', 1); toggleDropdown(member.id, true); };
+            dropdownMenu.appendChild(restItem);
+            const divider = document.createElement('hr');
+            divider.className = 'my-1';
+            dropdownMenu.appendChild(divider);
+            const workoutCancelItem = document.createElement('button');
+            workoutCancelItem.className = `${baseItemClass} workout-cancel-btn`;
+            workoutCancelItem.textContent = '운동 취소';
+            workoutCancelItem.disabled = (member.count - member.overtimeCount) <= 0;
+            workoutCancelItem.onclick = () => { updateRecord(member.id, 'workout', -1); toggleDropdown(member.id, true); };
+            dropdownMenu.appendChild(workoutCancelItem);
+            const overtimeCancelItem = document.createElement('button');
+            overtimeCancelItem.className = `${baseItemClass} overtime-cancel-btn`;
+            overtimeCancelItem.textContent = '야근 취소';
+            overtimeCancelItem.disabled = member.overtimeCount <= 0;
+            overtimeCancelItem.onclick = () => { updateRecord(member.id, 'overtime', -1); toggleDropdown(member.id, true); };
+            dropdownMenu.appendChild(overtimeCancelItem);
+            const restCancelItem = document.createElement('button');
+            restCancelItem.className = `${baseItemClass} rest-cancel-btn`;
+            restCancelItem.textContent = '휴식 취소';
+            restCancelItem.disabled = member.restCount <= 0;
+            restCancelItem.onclick = () => { updateRecord(member.id, 'rest', -1); toggleDropdown(member.id, true); };
+            dropdownMenu.appendChild(restCancelItem);
+            return dropdownMenu;
+        }
+
+        function toggleDropdown(id, forceClose = false) {
+            const dropdown = document.getElementById(`dropdown-${id}`);
+            if (!dropdown) return;
+            document.querySelectorAll('[id^="dropdown-"]').forEach(d => {
+                if (d.id !== `dropdown-${id}`) d.classList.add('hidden');
+            });
+            if (forceClose) dropdown.classList.add('hidden');
+            else dropdown.classList.toggle('hidden');
+        }
 
         function updateRecord(id, type, amount) {
             const memberDoc = membersCollection.doc(id);
@@ -729,7 +754,7 @@
 
             if (type === 'workout') {
                 const member = members.find(m => m.id === id);
-                if (amount < 0 && (!member || (member.count - member.overtimeCount) <= 0)) return; 
+                if (amount < 0 && (!member || (member.count - member.overtimeCount) <= 0)) return;
                 memberDoc.update({ count: valueToUpdate });
             } else if (type === 'overtime') {
                 const member = members.find(m => m.id === id);
@@ -742,8 +767,8 @@
             }
         }
 
-        function addMember(name) { 
-            if (name && isAdmin) { 
+        function addMember(name) {
+            if (name && isAdmin) {
                 const isDuplicate = members.some(member => member.name === name);
                 if (isDuplicate) {
                     showToast('이미 존재하는 멤버입니다.');
@@ -755,8 +780,8 @@
                     overtimeCount: 0,
                     restCount: 0,
                 }).catch(error => console.error("Error adding member: ", error));
-            } 
-        } 
+            }
+        }
 
         function resetAllData() {
             // 1. Delete all photos
@@ -779,57 +804,57 @@
                 });
                 return batch.commit();
             });
-        } 
+        }
 
-        function copyStatus() { 
-            const weeklyGoal = getWeeklyGoal(); 
-            const monthNumber = document.getElementById('month-number').textContent || '00'; 
-            const weekNumber = weekNumberEl.textContent || '0'; 
-            const startDate = startDateInput.value; 
-            const endDate = endDateInput.value; 
-            const formattedStartDate = startDate ? startDate.replaceAll('-', '.') : '시작일'; 
-            const formattedEndDate = endDate ? endDate.replaceAll('-', '.') : '종료일'; 
-            const dateRangeText = `${formattedStartDate} ~ ${formattedEndDate}`; 
-            let textToCopy = ``; 
-            if (currentPage === 'status') { 
-                textToCopy = `[${monthNumber}월 (${weekNumber}주) 운동 현황 (${dateRangeText})]\n\n`; 
-                const sortedMembers = [...members].sort((a,b) => { 
-                    if(b.count !== a.count) return b.count - a.count; 
+        function copyStatus() {
+            const weeklyGoal = getWeeklyGoal();
+            const monthNumber = document.getElementById('month-number').textContent || '00';
+            const weekNumber = weekNumberEl.textContent || '0';
+            const startDate = startDateInput.value;
+            const endDate = endDateInput.value;
+            const formattedStartDate = startDate ? startDate.replaceAll('-', '.') : '시작일';
+            const formattedEndDate = endDate ? endDate.replaceAll('-', '.') : '종료일';
+            const dateRangeText = `${formattedStartDate} ~ ${formattedEndDate}`;
+            let textToCopy = ``;
+            if (currentPage === 'status') {
+                textToCopy = `[${monthNumber}월 (${weekNumber}주) 운동 현황 (${dateRangeText})]\n\n`;
+                const sortedMembers = [...members].sort((a,b) => {
+                    if(b.count !== a.count) return b.count - a.count;
                     return a.overtimeCount - b.overtimeCount;
                 });
-                sortedMembers.forEach((member, index) => { 
-                    let status = `#${index + 1} ${member.name}: ${member.count}회 / ${weeklyGoal}회`; 
-                    const subTextParts = []; 
-                    if (member.overtimeCount > 0) subTextParts.push(`야근 ${member.overtimeCount}회`); 
-                    if (member.restCount > 0) subTextParts.push(`휴식 ${member.restCount}회`); 
-                    if (subTextParts.length > 0) status += ` (${subTextParts.join(', ')})`; 
-                    textToCopy += status + '\n'; 
-                }); 
-            } else if (currentPage === 'ranking') { 
-                textToCopy = `[${monthNumber}월 (${weekNumber}주) 랭킹 (${dateRangeText})]\n\n`; 
-                const rankedMembers = members.map(member => ({...member, points: calculatePoints(member)})).sort((a, b) => { 
-                    if (b.points !== a.points) return b.points - a.points; 
+                sortedMembers.forEach((member, index) => {
+                    let status = `#${index + 1} ${member.name}: ${member.count}회 / ${weeklyGoal}회`;
+                    const subTextParts = [];
+                    if (member.overtimeCount > 0) subTextParts.push(`야근 ${member.overtimeCount}회`);
+                    if (member.restCount > 0) subTextParts.push(`휴식 ${member.restCount}회`);
+                    if (subTextParts.length > 0) status += ` (${subTextParts.join(', ')})`;
+                    textToCopy += status + '\n';
+                });
+            } else if (currentPage === 'ranking') {
+                textToCopy = `[${monthNumber}월 (${weekNumber}주) 랭킹 (${dateRangeText})]\n\n`;
+                const rankedMembers = members.map(member => ({...member, points: calculatePoints(member)})).sort((a, b) => {
+                    if (b.points !== a.points) return b.points - a.points;
                     if (a.points === 0 && b.points === 0) {
                         if (b.count !== a.count) return b.count - a.count;
                     }
-                    return a.overtimeCount - b.overtimeCount; 
-                }); 
-                rankedMembers.forEach((member, index) => { 
-                    let rankText = `#${index + 1} ${member.name}: ${member.points}pt`; 
-                    if (index === 0) rankText = `🥇 ${rankText}`; 
-                    if (index === 1) rankText = `🥈 ${rankText}`; 
-                    if (index === 2) rankText = `🥉 ${rankText}`; 
-                    textToCopy += rankText + '\n'; 
-                }); 
-            } 
-            const textarea = document.createElement('textarea'); 
-            textarea.value = textToCopy; 
-            document.body.appendChild(textarea); 
-            textarea.select(); 
-            document.execCommand('copy'); 
-            document.body.removeChild(textarea); 
+                    return a.overtimeCount - b.overtimeCount;
+                });
+                rankedMembers.forEach((member, index) => {
+                    let rankText = `#${index + 1} ${member.name}: ${member.points}pt`;
+                    if (index === 0) rankText = `🥇 ${rankText}`;
+                    if (index === 1) rankText = `🥈 ${rankText}`;
+                    if (index === 2) rankText = `🥉 ${rankText}`;
+                    textToCopy += rankText + '\n';
+                });
+            }
+            const textarea = document.createElement('textarea');
+            textarea.value = textToCopy;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
             showToast('클립보드에 복사되었습니다!');
-        } 
+        }
 
         function logout() {
             localStorage.removeItem('workoutTrackerUser');
@@ -839,37 +864,37 @@
         }
 
         // --- Event Listeners ---
-        startDateInput.addEventListener('change', () => updateDateBasedInfo(true)); 
-        endDateInput.addEventListener('change', () => updateDateBasedInfo(true)); 
-        statusTabBtn.addEventListener('click', () => switchPage('status')); 
+        startDateInput.addEventListener('change', () => updateDateBasedInfo(true));
+        endDateInput.addEventListener('change', () => updateDateBasedInfo(true));
+        statusTabBtn.addEventListener('click', () => switchPage('status'));
         certificationTabBtn.addEventListener('click', () => switchPage('certification'));
-        rankingTabBtn.addEventListener('click', () => switchPage('ranking')); 
-        guideBtn.addEventListener('click', () => openModal(guideModal)); 
+        rankingTabBtn.addEventListener('click', () => switchPage('ranking'));
+        guideBtn.addEventListener('click', () => openModal(guideModal));
         logoutBtn.addEventListener('click', logout);
-        closeGuideBtn.addEventListener('click', closeAllModals); 
+        closeGuideBtn.addEventListener('click', closeAllModals);
         saveGuideBtn.addEventListener('click', saveGuideContent);
-        addMemberBtn.addEventListener('click', () => openModal(addMemberModal)); 
-        confirmAddBtn.addEventListener('click', () => { 
-            const newName = newMemberNameInput.value.trim(); 
-            if (newName) { 
-                addMember(newName); 
-                newMemberNameInput.value = ''; 
-                closeAllModals(); 
-            } 
-        }); 
-        cancelAddBtn.addEventListener('click', () => { 
-            newMemberNameInput.value = ''; 
-            closeAllModals(); 
-        }); 
-        resetBtn.addEventListener('click', () => openModal(resetConfirmModal)); 
-        confirmResetBtn.addEventListener('click', () => { 
-            resetAllData(); 
-            closeAllModals(); 
-        }); 
-        cancelResetBtn.addEventListener('click', closeAllModals); 
-        copyBtn.addEventListener('click', copyStatus); 
+        addMemberBtn.addEventListener('click', () => openModal(addMemberModal));
+        confirmAddBtn.addEventListener('click', () => {
+            const newName = newMemberNameInput.value.trim();
+            if (newName) {
+                addMember(newName);
+                newMemberNameInput.value = '';
+                closeAllModals();
+            }
+        });
+        cancelAddBtn.addEventListener('click', () => {
+            newMemberNameInput.value = '';
+            closeAllModals();
+        });
+        resetBtn.addEventListener('click', () => openModal(resetConfirmModal));
+        confirmResetBtn.addEventListener('click', () => {
+            resetAllData();
+            closeAllModals();
+        });
+        cancelResetBtn.addEventListener('click', closeAllModals);
+        copyBtn.addEventListener('click', copyStatus);
         photoViewerCloseBtn.addEventListener('click', closeAllModals);
-        
+
         loginConfirmBtn.addEventListener('click', () => {
             const name = loginNameInput.value.trim();
             if (!name) return;
@@ -910,11 +935,11 @@
                 openModal(loginModal);
             }
         }
-        
+
         function initializeApp() {
             loadGuideContent();
             loadDates();
-            
+
             if (membersUnsubscribe) membersUnsubscribe();
             membersUnsubscribe = membersCollection.onSnapshot(snapshot => {
                 members = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -929,14 +954,19 @@
                 snapshot.docChanges().forEach(change => {
                     if (change.type === 'added') {
                         const newPhoto = {id: change.doc.id, ...change.doc.data()};
-                        if (currentPage === 'certification' && !photos.some(p => p.id === newPhoto.id)) {
-                             const grid = document.getElementById('photo-grid');
-                             if (grid) {
-                                const emptyMessage = grid.querySelector('p');
-                                if (emptyMessage) emptyMessage.remove();
-                                grid.prepend(createPhotoElement(newPhoto));
-                                photos.unshift(newPhoto);
-                             }
+                        // photos 배열에 이미 있는 사진인지 확인하는 로직 추가
+                        if (!photos.some(p => p.id === newPhoto.id)) {
+                             // photos 배열의 맨 앞에 새 사진 추가
+                            photos.unshift(newPhoto);
+                            // 현재 페이지가 인증 탭일 때만 DOM에 직접 추가
+                            if (currentPage === 'certification') {
+                                const grid = document.getElementById('photo-grid');
+                                if (grid) {
+                                    const emptyMessage = grid.querySelector('p');
+                                    if (emptyMessage) emptyMessage.remove();
+                                    grid.prepend(createPhotoElement(newPhoto));
+                                }
+                            }
                         }
                     }
                     if (change.type === 'removed') {
@@ -946,11 +976,11 @@
                     }
                 });
             });
-            
-            switchPage('status'); 
+
+            switchPage('status');
         }
-        
+
         window.onload = checkLogin;
-    </script> 
- </body> 
- </html>
+    </script>
+</body>
+</html>
