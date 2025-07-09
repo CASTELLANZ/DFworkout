@@ -421,7 +421,9 @@
                 nameSpan.onblur = (e) => {
                     if (canEdit) {
                         const newName = e.target.textContent.trim();
-                        membersCollection.doc(member.id).update({ name: newName });
+                        membersCollection.doc(member.id).update({ name: newName }).then(() => {
+                            showToast('이름이 저장되었습니다.');
+                        });
                     }
                 };
                 memberDiv.querySelector('.plus-btn').onclick = () => updateRecord(member.id, 'workout', 1);
@@ -561,9 +563,19 @@
             document.getElementById('photo-upload-input').addEventListener('change', handlePhotoUpload);
             document.getElementById('load-more-photos-btn').addEventListener('click', () => loadPhotos(true));
             
-            photos = [];
-            lastVisiblePhotoDoc = null;
-            loadPhotos(false); 
+            const grid = document.getElementById('photo-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            if (!photos || photos.length === 0) {
+                grid.innerHTML = `<p class="col-span-3 text-center text-gray-500 py-8">등록된 인증 사진이 없습니다.</p>`;
+                return;
+            }
+
+            photos.forEach(photo => {
+                const item = createPhotoElement(photo);
+                grid.appendChild(item);
+            });
         }
 
         function loadPhotos(isLoadMore) {
@@ -579,9 +591,6 @@
                 const loadMoreBtn = document.getElementById('load-more-photos-btn');
                 if (snapshot.empty) {
                     if (loadMoreBtn) loadMoreBtn.style.display = 'none';
-                    if (!isLoadMore && photos.length === 0) {
-                         document.getElementById('photo-grid').innerHTML = `<p class="col-span-3 text-center text-gray-500 py-8">등록된 인증 사진이 없습니다.</p>`;
-                    }
                     isFetchingPhotos = false;
                     return;
                 }
@@ -913,6 +922,32 @@
             }, error => {
                 console.error("Error fetching members: ", error);
             });
+
+            if (photosUnsubscribe) photosUnsubscribe();
+            const firstPhotoQuery = photosCollection.orderBy('createdAt', 'desc').limit(1);
+            photosUnsubscribe = firstPhotoQuery.onSnapshot(snapshot => {
+                snapshot.docChanges().forEach(change => {
+                    if (change.type === 'added') {
+                        const newPhoto = {id: change.doc.id, ...change.doc.data()};
+                        if (currentPage === 'certification' && !photos.some(p => p.id === newPhoto.id)) {
+                             const grid = document.getElementById('photo-grid');
+                             if (grid) {
+                                const emptyMessage = grid.querySelector('p');
+                                if (emptyMessage) emptyMessage.remove();
+                                grid.prepend(createPhotoElement(newPhoto));
+                                photos.unshift(newPhoto);
+                             }
+                        }
+                    }
+                    if (change.type === 'removed') {
+                        const photoDiv = document.querySelector(`[data-id="${change.doc.id}"]`).closest('.photo-grid-item');
+                        if(photoDiv) photoDiv.remove();
+                        photos = photos.filter(p => p.id !== change.doc.id);
+                    }
+                });
+            });
+            
+            switchPage('status'); 
         }
         
         window.onload = checkLogin;
