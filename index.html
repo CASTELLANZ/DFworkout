@@ -170,10 +170,11 @@
         let photos = [];
         let lastVisiblePhotoDoc = null;
         let isFetchingPhotos = false;
-        let photosUnsubscribe = null; // ◀◀◀ 수정됨
+        let photosUnsubscribe = null;
         let membersUnsubscribe = null;
         let currentUser = null;
         let isAdmin = false;
+        let photosInitiallyLoaded = false;
 
         // --- DOM Elements ---
         const contentArea = document.getElementById('content-area');
@@ -335,8 +336,7 @@
                 renderRankingPage();
             }
         }
-        
-        // ◀◀◀ 전체 함수가 효율적으로 수정됨
+
         function switchPage(page) {
             currentPage = page;
             const tabs = [statusTabBtn, certificationTabBtn, rankingTabBtn];
@@ -358,14 +358,14 @@
                 certificationTabBtn.classList.add('custom-teal-text', 'border-b-2', 'border-current', 'font-extrabold');
                 certificationTabBtn.classList.remove('text-gray-500');
         
-                // 사진 데이터가 아직 로드되지 않았을 경우에만 실행
-                if (photos.length === 0) {
+                if (!photosInitiallyLoaded) {
+                    photos = [];
                     lastVisiblePhotoDoc = null;
                     isFetchingPhotos = false;
-                    renderCertificationPage(); // 먼저 빈 화면을 그리고
-                    loadPhotos(false);       // 그 다음에 데이터를 불러옵니다.
+                    renderCertificationPage();
+                    loadPhotos(false);
+                    photosInitiallyLoaded = true;
                 } else {
-                    // 이미 데이터가 있다면, 불러오지 않고 그냥 화면만 다시 그립니다.
                     renderCertificationPage();
                 }
         
@@ -558,6 +558,7 @@
             }
         }
 
+        // ◀◀◀ '마지막 사진' 메시지 기능 추가됨
         function renderCertificationPage() {
             contentArea.innerHTML = `
                 <div class="flex justify-end">
@@ -568,59 +569,64 @@
                 <div id="load-more-container" class="text-center mt-4">
                     <button id="load-more-photos-btn" class="text-sm custom-teal-text font-semibold hover:underline">더보기</button>
                 </div>
+                <div id="no-more-photos-message" class="text-center text-sm text-gray-500 mt-4" style="display: none;"></div>
             `;
-
+        
             document.getElementById('photo-upload-input').addEventListener('change', handlePhotoUpload);
             document.getElementById('load-more-photos-btn').addEventListener('click', () => loadPhotos(true));
-
+        
             const grid = document.getElementById('photo-grid');
             if (!grid) return;
             grid.innerHTML = '';
-
+        
             if (!photos || photos.length === 0) {
-                // 이 메시지는 loadPhotos가 실행되기 전에 잠깐 보이거나, 정말 사진이 없을 때 보입니다.
                 grid.innerHTML = `<p class="col-span-3 text-center text-gray-500 py-8">등록된 인증 사진이 없습니다.</p>`;
                 return;
             }
-
-            // 이미 photos 배열에 사진이 있다면(다른 탭 갔다 돌아온 경우) 즉시 렌더링합니다.
+        
             photos.forEach(photo => {
                 const item = createPhotoElement(photo);
                 grid.appendChild(item);
             });
         }
 
+        // ◀◀◀ '마지막 사진' 메시지 기능 추가됨
         function loadPhotos(isLoadMore) {
             if (isFetchingPhotos) return;
             isFetchingPhotos = true;
-
+        
             let query = photosCollection.orderBy('createdAt', 'desc').limit(9);
             if (isLoadMore && lastVisiblePhotoDoc) {
                 query = query.startAfter(lastVisiblePhotoDoc);
             }
-
+        
             query.get().then(snapshot => {
                 const loadMoreBtn = document.getElementById('load-more-photos-btn');
                 const grid = document.getElementById('photo-grid');
-
+                const noMorePhotosMsg = document.getElementById('no-more-photos-message');
+        
                 if (snapshot.empty) {
                     if (loadMoreBtn) loadMoreBtn.style.display = 'none';
-                    // 만약 첫 로딩인데 비어있다면, 메시지를 표시합니다.
-                    if (!isLoadMore && grid) {
+        
+                    if (isLoadMore && noMorePhotosMsg) {
+                        noMorePhotosMsg.textContent = '마지막 사진입니다.';
+                        noMorePhotosMsg.style.display = 'block';
+                    }
+                    
+                    if (!isLoadMore && grid.children.length === 0) {
                          grid.innerHTML = `<p class="col-span-3 text-center text-gray-500 py-8">등록된 인증 사진이 없습니다.</p>`;
                     }
                     isFetchingPhotos = false;
                     return;
                 }
                 
-                // 첫 로딩일 경우, 기존에 있던 '사진 없음' 메시지를 지웁니다.
                 if (!isLoadMore && grid) {
                     const emptyMsg = grid.querySelector('p');
                     if (emptyMsg) emptyMsg.remove();
                 }
-
+        
                 lastVisiblePhotoDoc = snapshot.docs[snapshot.docs.length - 1];
-
+        
                 snapshot.forEach(doc => {
                     const photo = { id: doc.id, ...doc.data() };
                     photos.push(photo);
@@ -629,7 +635,7 @@
                         grid.appendChild(item);
                     }
                 });
-
+        
                 if (loadMoreBtn) loadMoreBtn.style.display = 'block';
                 isFetchingPhotos = false;
             });
@@ -954,11 +960,8 @@
                 snapshot.docChanges().forEach(change => {
                     if (change.type === 'added') {
                         const newPhoto = {id: change.doc.id, ...change.doc.data()};
-                        // photos 배열에 이미 있는 사진인지 확인하는 로직 추가
                         if (!photos.some(p => p.id === newPhoto.id)) {
-                             // photos 배열의 맨 앞에 새 사진 추가
                             photos.unshift(newPhoto);
-                            // 현재 페이지가 인증 탭일 때만 DOM에 직접 추가
                             if (currentPage === 'certification') {
                                 const grid = document.getElementById('photo-grid');
                                 if (grid) {
