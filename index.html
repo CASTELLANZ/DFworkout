@@ -312,7 +312,8 @@
         function calculatePoints(member) {
             const goalCount = getWeeklyGoal();
             const weekNumber = parseInt(weekNumberEl.textContent, 10) || 1;
-            const pureCount = member.count - member.overtimeCount;
+            //  [변경됨] '휴식' 횟수도 포인트 계산에서 제외
+            const pureCount = member.count - member.overtimeCount - member.restCount;
             let points = 0;
             if (pureCount > goalCount) {
                 const firstTierLimit = goalCount + weekNumber;
@@ -558,7 +559,6 @@
             }
         }
 
-        // ◀◀◀ '마지막 사진' 메시지 기능 추가됨
         function renderCertificationPage() {
             contentArea.innerHTML = `
                 <div class="flex justify-end">
@@ -590,7 +590,6 @@
             });
         }
 
-        // ◀◀◀ '마지막 사진' 메시지 기능 추가됨
         function loadPhotos(isLoadMore) {
             if (isFetchingPhotos) return;
             isFetchingPhotos = true;
@@ -726,7 +725,8 @@
             const workoutCancelItem = document.createElement('button');
             workoutCancelItem.className = `${baseItemClass} workout-cancel-btn`;
             workoutCancelItem.textContent = '운동 취소';
-            workoutCancelItem.disabled = (member.count - member.overtimeCount) <= 0;
+            // [변경됨] '휴식' 횟수도 계산에 포함하여 순수 운동 횟수가 0 이하일 때 비활성화
+            workoutCancelItem.disabled = (member.count - member.overtimeCount - member.restCount) <= 0;
             workoutCancelItem.onclick = () => { updateRecord(member.id, 'workout', -1); toggleDropdown(member.id, true); };
             dropdownMenu.appendChild(workoutCancelItem);
             const overtimeCancelItem = document.createElement('button');
@@ -760,7 +760,7 @@
 
             if (type === 'workout') {
                 const member = members.find(m => m.id === id);
-                if (amount < 0 && (!member || (member.count - member.overtimeCount) <= 0)) return;
+                if (amount < 0 && (!member || (member.count - member.overtimeCount - member.restCount) <= 0)) return;
                 memberDoc.update({ count: valueToUpdate });
             } else if (type === 'overtime') {
                 const member = members.find(m => m.id === id);
@@ -769,7 +769,8 @@
             } else if (type === 'rest') {
                 const member = members.find(m => m.id === id);
                 if (amount < 0 && (!member || member.restCount <= 0)) return;
-                memberDoc.update({ restCount: valueToUpdate });
+                // [변경됨] '휴식' 시 'count'도 함께 업데이트
+                memberDoc.update({ count: valueToUpdate, restCount: valueToUpdate });
             }
         }
 
