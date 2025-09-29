@@ -827,66 +827,56 @@ const rankedMembers = members.map(member => ({
             });
         }
 
-        function copyStatus() {
-            const weeklyGoal = getWeeklyGoal();
-            const monthNumber = document.getElementById('month-number').textContent || '00';
-            const weekNumber = weekNumberEl.textContent || '0';
-            const startDate = startDateInput.value;
-            const endDate = endDateInput.value;
-            const formattedStartDate = startDate ? startDate.replaceAll('-', '.') : '시작일';
-            const formattedEndDate = endDate ? endDate.replaceAll('-', '.') : '종료일';
-            const dateRangeText = `${formattedStartDate} ~ ${formattedEndDate}`;
-            let textToCopy = ``;
-            if (currentPage === 'status') {
-                textToCopy = `[${monthNumber}월 (${weekNumber}주) 운동 현황 (${dateRangeText})]\n\n`;
-                const sortedMembers = [...members].sort((a, b) => {
-                    if (b.count !== a.count) return b.count - a.count;
-                    if (a.overtimeCount !== b.overtimeCount) return a.overtimeCount - b.overtimeCount;
-                    return a.name.localeCompare(b.name);
-                });
-                sortedMembers.forEach((member, index) => {
-                    let status = `#${index + 1} ${member.name}: ${member.count}회 / ${weeklyGoal}회`;
-                    const subTextParts = [];
-                    if (member.overtimeCount > 0) subTextParts.push(`야근 ${member.overtimeCount}회`);
-                    if (member.restCount > 0) subTextParts.push(`휴식 ${member.restCount}회`);
-                    if (subTextParts.length > 0) status += ` (${subTextParts.join(', ')})`;
-                    textToCopy += status + '\n';
-                });
-            } else if (currentPage === 'ranking') {
-                textToCopy = `[${monthNumber}월 (${weekNumber}주) 랭킹 (${dateRangeText})]\n\n`;
-                const rankedMembers = members.map(member => ({...member, points: calculatePoints(member)})).sort((a, b) => {
-                    // 1. 포인트 높은 순 (내림차순)
-                    if (b.points !== a.points) return b.points - a.points;
-                
-                    // 2. 야근 횟수 적은 순 (오름차순)
-                    if (a.overtimeCount !== b.overtimeCount) return a.overtimeCount - b.overtimeCount;
-                
-                    // 3. 위 두 조건이 모두 같으면 이름순 (가나다순)
-                    return a.name.localeCompare(b.name);
-                });
-                rankedMembers.forEach((member, index) => {
-                    let rankText = `#${index + 1} ${member.name}: ${member.points}pt`;
-                    if (index === 0) rankText = `🥇 ${rankText}`;
-                    if (index === 1) rankText = `🥈 ${rankText}`;
-                    if (index === 2) rankText = `🥉 ${rankText}`;
-                    textToCopy += rankText + '\n';
-                });
-            }
-            const textarea = document.createElement('textarea');
-            textarea.value = textToCopy;
-            document.body.appendChild(textarea);
-            textarea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textarea);
-            showToast('클립보드에 복사되었습니다!');
-        }
+function copyStatus() {
+    const weeklyGoal = getWeeklyGoal();
+    const monthNumber = document.getElementById('month-number').textContent || '00';
+    const weekNumber = weekNumberEl.textContent || '0';
+    const startDate = startDateInput.value;
+    const endDate = endDateInput.value;
+    const formattedStartDate = startDate ? startDate.replaceAll('-', '.') : '시작일';
+    const formattedEndDate = endDate ? endDate.replaceAll('-', '.') : '종료일';
+    const dateRangeText = `${formattedStartDate} ~ ${formattedEndDate}`;
+    let textToCopy = ``;
 
-        function logout() {
-            localStorage.removeItem('workoutTrackerUser');
-            if (membersUnsubscribe) membersUnsubscribe();
-            if (photosUnsubscribe) photosUnsubscribe();
-            window.location.reload();
-        }
+    if (currentPage === 'status') {
+        textToCopy = `[${monthNumber}월 (${weekNumber}주) 운동 현황 (${dateRangeText})]\n\n`;
+        const sortedMembers = [...members].sort((a, b) => {
+            if (b.count !== a.count) return b.count - a.count;
+            if (a.overtimeCount !== b.overtimeCount) return a.overtimeCount - b.overtimeCount;
+            return a.name.localeCompare(b.name);
+        });
+        sortedMembers.forEach((member, index) => {
+            let status = `#${index + 1} ${member.name}: ${member.count}회 / ${weeklyGoal}회`;
+            const subTextParts = [];
+            if (member.overtimeCount > 0) subTextParts.push(`야근 ${member.overtimeCount}회`);
+            if (member.restCount > 0) subTextParts.push(`휴식 ${member.restCount}회`);
+            if (subTextParts.length > 0) status += ` (${subTextParts.join(', ')})`;
+            textToCopy += status + '\n';
+        });
+    } else if (currentPage === 'ranking') {
+        textToCopy = `[${monthNumber}월 (${weekNumber}주) 랭킹 (${dateRangeText})]\n\n`;
+        const rankedMembers = members.map(member => ({...member, points: calculatePoints(member)})).sort((a, b) => {
+            if (b.points !== a.points) return b.points - a.points;
+            if (a.overtimeCount !== b.overtimeCount) return a.overtimeCount - b.overtimeCount;
+            return a.name.localeCompare(b.name);
+        });
+        rankedMembers.forEach((member, index) => {
+            let rankText = `#${index + 1} ${member.name}: ${member.points}pt`;
+            if (index === 0) rankText = `🥇 ${rankText}`;
+            if (index === 1) rankText = `🥈 ${rankText}`;
+            if (index === 2) rankText = `🥉 ${rankText}`;
+            textToCopy += rankText + '\n';
+        });
+    }
+
+    const textarea = document.createElement('textarea');
+    textarea.value = textToCopy;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
+    showToast('클립보드에 복사되었습니다!');
+}
 
         // --- Event Listeners ---
 startDateInput.addEventListener('change', () => updateDateBasedInfo(true, true));
@@ -1006,5 +996,6 @@ endDateInput.addEventListener('change', () => updateDateBasedInfo(true, true));
     </script>
 </body>
 </html>
+
 
 
