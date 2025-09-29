@@ -253,14 +253,14 @@
                     const data = doc.data();
                     if(data.startDate) startDateInput.value = data.startDate;
                     if(data.endDate) endDateInput.value = data.endDate;
-                    updateDateBasedInfo(false);
+                    updateDateBasedInfo(false, false);
                 }
             }).catch(error => {
                 console.error("날짜 불러오기 실패:", error);
             });
         }
 
-        function updateDateBasedInfo(resetPhotos = true) {
+        function updateDateBasedInfo(resetPhotos = true, shouldSave = false) {
             const startDateVal = startDateInput.value;
             const endDateVal = endDateInput.value;
             if (!startDateVal || !endDateVal) return;
@@ -271,10 +271,11 @@
             if (endDate < startDate) {
                 weekNumberEl.textContent = '0';
                 monthNumberEl.textContent = '00';
-            } else {
-                dateDoc.set({
-                    startDate: startDateVal,
-                    endDate: endDateVal
+             } else {
+                    if (shouldSave) { // shouldSave가 true일 때만 저장
+                        dateDoc.set({
+                            startDate: startDateVal,
+                            endDate: endDateVal
                 }).then(() => {
                     if (resetPhotos && isAdmin) {
                         openModal(resetConfirmModal);
@@ -386,10 +387,20 @@
                 firstPositions[el.dataset.id] = el.getBoundingClientRect();
             });
 
-            members.sort((a, b) => {
-                if (b.count !== a.count) return b.count - a.count;
-                return a.overtimeCount - b.overtimeCount;
-            });
+members.sort((a, b) => {
+    // 1. 운동 횟수가 다르면, 횟수 기준 내림차순
+    if (b.count !== a.count) {
+        return b.count - a.count;
+    }
+
+    // 2. 운동 횟수가 같고 야근 횟수가 다르면, 야근 횟수 기준 오름차순
+    if (a.overtimeCount !== b.overtimeCount) {
+        return a.overtimeCount - b.overtimeCount;
+    }
+
+    // 3. 운동, 야근 횟수 모두 같으면, 이름 기준 오름차순(가나다순)
+    return a.name.localeCompare(b.name);
+});
 
             contentArea.innerHTML = '';
             addMemberContainer.style.display = isAdmin ? 'block' : 'none';
@@ -825,9 +836,10 @@
             let textToCopy = ``;
             if (currentPage === 'status') {
                 textToCopy = `[${monthNumber}월 (${weekNumber}주) 운동 현황 (${dateRangeText})]\n\n`;
-                const sortedMembers = [...members].sort((a,b) => {
-                    if(b.count !== a.count) return b.count - a.count;
-                    return a.overtimeCount - b.overtimeCount;
+                const sortedMembers = [...members].sort((a, b) => {
+                    if (b.count !== a.count) return b.count - a.count;
+                    if (a.overtimeCount !== b.overtimeCount) return a.overtimeCount - b.overtimeCount;
+                    return a.name.localeCompare(b.name);
                 });
                 sortedMembers.forEach((member, index) => {
                     let status = `#${index + 1} ${member.name}: ${member.count}회 / ${weeklyGoal}회`;
@@ -871,8 +883,8 @@
         }
 
         // --- Event Listeners ---
-        startDateInput.addEventListener('change', () => updateDateBasedInfo(true));
-        endDateInput.addEventListener('change', () => updateDateBasedInfo(true));
+startDateInput.addEventListener('change', () => updateDateBasedInfo(true, true));
+endDateInput.addEventListener('change', () => updateDateBasedInfo(true, true));
         statusTabBtn.addEventListener('click', () => switchPage('status'));
         certificationTabBtn.addEventListener('click', () => switchPage('certification'));
         rankingTabBtn.addEventListener('click', () => switchPage('ranking'));
@@ -988,3 +1000,4 @@
     </script>
 </body>
 </html>
+
