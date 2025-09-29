@@ -489,16 +489,19 @@ members.sort((a, b) => {
                 contentArea.innerHTML = `<p class="text-center text-gray-500 py-8">멤버가 없어 랭킹을 표시할 수 없습니다.</p>`;
                 return;
             }
-            const rankedMembers = members.map(member => ({
-                ...member,
-                points: calculatePoints(member)
-            })).sort((a, b) => {
-                if (b.points !== a.points) return b.points - a.points;
-                if (a.points === 0 && b.points === 0) {
-                    if (b.count !== a.count) return b.count - a.count;
-                }
-                return a.overtimeCount - b.overtimeCount;
-            });
+const rankedMembers = members.map(member => ({
+    ...member,
+    points: calculatePoints(member)
+})).sort((a, b) => {
+    // 1. 포인트 높은 순 (내림차순)
+    if (b.points !== a.points) return b.points - a.points;
+
+    // 2. 야근 횟수 적은 순 (오름차순)
+    if (a.overtimeCount !== b.overtimeCount) return a.overtimeCount - b.overtimeCount;
+
+    // 3. 위 두 조건이 모두 같으면 이름순 (가나다순)
+    return a.name.localeCompare(b.name);
+});
             const topRankers = rankedMembers.slice(0, 3);
             const otherRankers = rankedMembers.slice(3);
             const podium = document.createElement('div');
@@ -852,11 +855,14 @@ members.sort((a, b) => {
             } else if (currentPage === 'ranking') {
                 textToCopy = `[${monthNumber}월 (${weekNumber}주) 랭킹 (${dateRangeText})]\n\n`;
                 const rankedMembers = members.map(member => ({...member, points: calculatePoints(member)})).sort((a, b) => {
+                    // 1. 포인트 높은 순 (내림차순)
                     if (b.points !== a.points) return b.points - a.points;
-                    if (a.points === 0 && b.points === 0) {
-                        if (b.count !== a.count) return b.count - a.count;
-                    }
-                    return a.overtimeCount - b.overtimeCount;
+                
+                    // 2. 야근 횟수 적은 순 (오름차순)
+                    if (a.overtimeCount !== b.overtimeCount) return a.overtimeCount - b.overtimeCount;
+                
+                    // 3. 위 두 조건이 모두 같으면 이름순 (가나다순)
+                    return a.name.localeCompare(b.name);
                 });
                 rankedMembers.forEach((member, index) => {
                     let rankText = `#${index + 1} ${member.name}: ${member.points}pt`;
@@ -1000,4 +1006,5 @@ endDateInput.addEventListener('change', () => updateDateBasedInfo(true, true));
     </script>
 </body>
 </html>
+
 
